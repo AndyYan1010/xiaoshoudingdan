@@ -18,9 +18,15 @@ import android.widget.Toast;
 
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.activity.GoodsDetailActivity;
+import com.bt.andy.sales_order.adapter.LvGoodsAdapter;
+import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
 import com.bt.andy.sales_order.utils.ToastUtils;
+import com.bt.andy.sales_order.viewmodle.MyListView;
 import com.uuzuche.lib_zxing.activity.CaptureActivity;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @创建者 AndyYan
@@ -34,14 +40,17 @@ import com.uuzuche.lib_zxing.activity.CodeUtils;
 public class TotalGoodsFragment extends Fragment implements View.OnClickListener {
     private View     mRootView;
     private TextView mTv_title;
-    private EditText mEdit_phone, mEdit_name;
+    private EditText mEdit_phone, mEdit_name, mEdit_goods_id;
     private ImageView mImg_delete, mImg_confirm;
-    private TextView  mTv_entry;
+    private TextView mTv_entry, mTv_surema;
     private ImageView mImg_scan;
     private int MY_PERMISSIONS_REQUEST_CALL_PHONE2 = 1001;//申请照相机权限结果
     private int REQUEST_CODE                       = 1002;//接收扫描结果
     private int DETAIL_REQUESTCODE                 = 111;//商品详情页返回参数对应码
     private int ORDER_RESULT_CODE                  = 9527;//商品详情页返回结果码
+    private MyListView         mLv_goods;
+    private List<SubtableInfo> mData;//存放每个子表的数据
+    private LvGoodsAdapter     mGoodsAdapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -52,29 +61,33 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     }
 
     private void initView() {
-        mImg_scan = mRootView.findViewById(R.id.img_back);
         mTv_title = mRootView.findViewById(R.id.tv_title);
-        mEdit_phone = mRootView.findViewById(R.id.edit_phone);
-        mEdit_name = mRootView.findViewById(R.id.edit_name);
-        mImg_delete = mRootView.findViewById(R.id.img_delete);
-        mImg_confirm = mRootView.findViewById(R.id.img_confirm);
-        mTv_entry = mRootView.findViewById(R.id.tv_entry);
+        mEdit_phone = mRootView.findViewById(R.id.edit_phone);//输入手机号
+        mEdit_name = mRootView.findViewById(R.id.edit_name);//输入会员名
+        mImg_delete = mRootView.findViewById(R.id.img_delete);//清空手机号
+        mImg_confirm = mRootView.findViewById(R.id.img_confirm);//查询手机号
+        mTv_entry = mRootView.findViewById(R.id.tv_entry);//确认录入会员名
+        mImg_scan = mRootView.findViewById(R.id.img_scan);//扫描
+        mEdit_goods_id = mRootView.findViewById(R.id.edit_goods_id);//输入商品id
+        mTv_surema = mRootView.findViewById(R.id.tv_surema);//确认输入的商品id
+        mLv_goods = mRootView.findViewById(R.id.lv_goods);
     }
 
     private void initData() {
-
-        mImg_scan.setVisibility(View.VISIBLE);
-        mImg_scan.setImageResource(R.drawable.scanning);
-        mImg_scan.setOnClickListener(this);
         mTv_title.setText("销售下单");
+        mImg_scan.setOnClickListener(this);
         mImg_delete.setOnClickListener(this);
         mImg_confirm.setOnClickListener(this);
+        mTv_surema.setOnClickListener(this);
+        mData = new ArrayList();
+        mGoodsAdapter = new LvGoodsAdapter(getContext(), mData);
+        mLv_goods.setAdapter(mGoodsAdapter);
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.img_back:
+            case R.id.img_scan:
                 //动态申请照相机权限
                 //第二个参数是需要申请的权限
                 if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA)
@@ -91,8 +104,17 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 mEdit_phone.setText("");
                 break;
             case R.id.img_confirm:
-                ToastUtils.showToast(getContext(), "等待网络确认");
+                ToastUtils.showToast(getContext(), "等待网络确认会员号");
                 mTv_entry.setVisibility(View.VISIBLE);
+                break;
+            case R.id.tv_surema:
+                String goodsid = String.valueOf(mEdit_goods_id.getText()).trim();
+                if (null == goodsid || "".equals(goodsid) || "商品编码".equals(goodsid)) {
+                    ToastUtils.showToast(getContext(), "请输入商品编码");
+                    return;
+                }
+                //跳转商品详情界面，携带商品id
+                sendGoodsInfo(goodsid);
                 break;
         }
     }
@@ -112,9 +134,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 }
                 if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_SUCCESS) {
                     String result = bundle.getString(CodeUtils.RESULT_STRING);
-                    ToastUtils.showToast(getContext(), "解析结果:  " + result);
-                    //访问网络，获取商品信息，跳转fragment展示，在新的页面确定后添加到listview中
-                    getGoodsInfo();
+                    //获取商品id信息，跳转activity展示，在新的页面确定后添加到listview中
+                    sendGoodsInfo(result);
                 } else if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_FAILED) {
                     Toast.makeText(getContext(), "解析二维码失败", Toast.LENGTH_LONG).show();
                 }
@@ -125,14 +146,22 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String orderInfo = data.getStringExtra("orderDetail");
                 if (null != orderInfo) {
                     //填入总表
+                    SubtableInfo goodsInfo = new SubtableInfo();
+                    goodsInfo.setGoodsName("熊猫Tv9527");
+                    goodsInfo.setZh_unit_price(1900);
+                    goodsInfo.setNumber(10);
+                    goodsInfo.setSum_pric(19000);
+                    mData.add(goodsInfo);
+                    mGoodsAdapter.notifyDataSetChanged();
                 }
             }
         }
     }
 
-    private void getGoodsInfo() {
-        //获取商品详情
-        //跳转fragment，选择添加
+    private void sendGoodsInfo(String goodsID) {
+        ToastUtils.showToast(getContext(), "商品编码：" + goodsID);
+        mEdit_goods_id.setText(goodsID);
+        //跳转activity，选择添加
         showGoodsDetail();
     }
 

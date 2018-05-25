@@ -36,7 +36,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
     private void getView() {
         mEdit_num = (EditText) findViewById(R.id.edit_num);
         mEdit_psd = (EditText) findViewById(R.id.edit_psd);
-        mBt_submit = (Button) findViewById(R.id.bt_submit);
+        mBt_submit = (Button) findViewById(R.id.bt_login);
     }
 
     private void setData() {
@@ -46,7 +46,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.bt_submit:
+            case R.id.bt_login:
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();

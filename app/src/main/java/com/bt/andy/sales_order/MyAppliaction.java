@@ -20,6 +20,7 @@ import java.util.ArrayList;
 public class MyAppliaction extends Application {
     public static boolean             isRelease    = false;
     public static ArrayList<Activity> listActivity = new ArrayList<Activity>();
+    public static int                 flag         = -1;//判断是否被回收
 
     @Override
     public void onCreate() {
@@ -33,7 +34,7 @@ public class MyAppliaction extends Application {
                 activity.finish();
             }
             // 结束进程
-            //            System.exit(0);
+            System.exit(0);
         } catch (Exception e) {
             ExceptionUtil.handleException(e);
         }

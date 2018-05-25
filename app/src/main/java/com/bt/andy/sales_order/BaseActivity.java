@@ -1,8 +1,11 @@
 package com.bt.andy.sales_order;
 
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+
+import com.bt.andy.sales_order.activity.LoginActivity;
 
 /**
  * @创建者 AndyYan
@@ -18,6 +21,16 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if (MyAppliaction.flag == -1) {//flag为-1说明程序被杀掉
+            protectApp();
+        }
+        MyAppliaction.listActivity.add(this);
+    }
+    protected void protectApp() {
+        Intent intent = new Intent(this, LoginActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);//清空栈里MainActivity之上的所有activty
+        startActivity(intent);
+        finish();
+        MyAppliaction.flag = 0;
     }
 }
