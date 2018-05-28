@@ -1,8 +1,10 @@
 package com.bt.andy.sales_order.activity;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -19,10 +21,20 @@ import android.widget.TextView;
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
+import com.bt.andy.sales_order.utils.Consts;
+import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+
+import java.sql.SQLTransactionRollbackException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @创建者 AndyYan
@@ -52,6 +64,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private EditText mEdit_address;//配送地址
     private Button   mBt_submit;//确定下单
     private double goods_price = 1000;
+    Dialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +92,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mEdit_remarks = findViewById(R.id.edit_remarks);
         mEdit_address = findViewById(R.id.edit_address);
         mBt_submit = findViewById(R.id.bt_submit);
+        dialog = new Dialog(this);
     }
 
     private void setData() {
@@ -215,5 +229,52 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 dialog.cancel();
             }
         }).create().show();
+    }
+
+    class ItemTask extends AsyncTask<Void,String,String>{
+        String barcode;
+
+        ItemTask(String barcode){
+            this.barcode = barcode;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dialog.show();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select a.fitemid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID group by a.fname,a.FSalePrice,c.fname where a.fnumber='"+barcode+"'";
+            Map<String,String> map = new HashMap<>();
+            map.put("FSql",sql);
+            map.put("FTable","t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select,map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                Document doc = DocumentHelper.parseText(s);
+                Element ele = doc.getRootElement();
+                Iterator iter = ele.elementIterator("Cust");
+                HashMap<String,String> map = new HashMap<>();
+                while (iter.hasNext()) {
+                    Element recordEle = (Element) iter.next();
+                    map.put("itemid",recordEle.elementTextTrim("fitemid"));//物料内码(提交订单用)
+                    map.put("fname",recordEle.elementTextTrim("fname"));//物料名称
+                    map.put("fsaleprice",recordEle.elementTextTrim("FSalePrice"));//销售单价
+                    map.put("fqty",recordEle.elementTextTrim("fqty"));//库存数量
+                    map.put("funit",recordEle.elementTextTrim("funit"));//单位
+                }
+                //填充数据到页面
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            dialog.dismiss();
+        }
     }
 }
