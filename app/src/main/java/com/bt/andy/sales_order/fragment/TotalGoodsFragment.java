@@ -200,12 +200,18 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
             if (resultCode == ORDER_RESULT_CODE) {
                 String orderInfo = data.getStringExtra("orderDetail");
                 if (null != orderInfo) {
+                    String goodsName = data.getStringExtra("goodsName");
+                    String unitPrice = data.getStringExtra("unitPrice");
+                    double unit_price = Double.parseDouble(unitPrice);
+                    int number = Integer.parseInt(data.getStringExtra("number"));
+                    double sumPrice = Double.parseDouble(data.getStringExtra("sumPrice"));
+                    String goodsLocalId = data.getStringExtra("goodsLocalId");
                     //填入总表
                     SubtableInfo goodsInfo = new SubtableInfo();
-                    goodsInfo.setGoodsName("熊猫Tv9527");
-                    goodsInfo.setZh_unit_price(1900);
-                    goodsInfo.setNumber(10);
-                    goodsInfo.setSum_pric(19000);
+                    goodsInfo.setGoodsName(goodsName);
+                    goodsInfo.setZh_unit_price(unit_price);
+                    goodsInfo.setNumber(number);
+                    goodsInfo.setSum_pric(sumPrice);
                     mData.add(goodsInfo);
                     mGoodsAdapter.notifyDataSetChanged();
                     mTv_no_good.setVisibility(View.GONE);
@@ -221,12 +227,13 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         ToastUtils.showToast(getContext(), "商品编码：" + goodsID);
         mEdit_goods_id.setText(goodsID);
         //跳转activity，选择添加
-        showGoodsDetail();
+        showGoodsDetail(goodsID);
     }
 
-    private void showGoodsDetail() {
+    private void showGoodsDetail(String goodsID) {
         //跳转商品详情
         Intent intent = new Intent(getContext(), GoodsDetailActivity.class);
+        intent.putExtra("goodsId",goodsID);
         startActivityForResult(intent, DETAIL_REQUESTCODE);
     }
 }
