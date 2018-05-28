@@ -2,6 +2,8 @@ package com.bt.andy.sales_order.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -11,6 +13,8 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -42,7 +46,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private TextView mTv_title;
     private EditText mEdit_phone, mEdit_name, mEdit_goods_id;
     private ImageView mImg_delete, mImg_confirm;
-    private TextView mTv_entry, mTv_surema;
+    private TextView mTv_entry, mTv_surema, mTv_no_good;
     private ImageView mImg_scan;
     private int MY_PERMISSIONS_REQUEST_CALL_PHONE2 = 1001;//申请照相机权限结果
     private int REQUEST_CODE                       = 1002;//接收扫描结果
@@ -51,6 +55,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private MyListView         mLv_goods;
     private List<SubtableInfo> mData;//存放每个子表的数据
     private LvGoodsAdapter     mGoodsAdapter;
+    private Button             mBt_submit;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -70,7 +75,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mImg_scan = mRootView.findViewById(R.id.img_scan);//扫描
         mEdit_goods_id = mRootView.findViewById(R.id.edit_goods_id);//输入商品id
         mTv_surema = mRootView.findViewById(R.id.tv_surema);//确认输入的商品id
-        mLv_goods = mRootView.findViewById(R.id.lv_goods);
+        mTv_no_good = mRootView.findViewById(R.id.tv_no_good);//提示未添加商品
+        mLv_goods = mRootView.findViewById(R.id.lv_goods);//商品列表
+        mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
     }
 
     private void initData() {
@@ -82,6 +89,48 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mData = new ArrayList();
         mGoodsAdapter = new LvGoodsAdapter(getContext(), mData);
         mLv_goods.setAdapter(mGoodsAdapter);
+        mLv_goods.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+            }
+        });
+        mLv_goods.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                //弹出对话框提示用户将要删除该条item
+                showDeleteDailog(i);
+                return false;
+            }
+        });
+        mBt_submit.setOnClickListener(this);
+        mBt_submit.setVisibility(View.GONE);
+    }
+
+    private void showDeleteDailog(final int position) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), AlertDialog.THEME_HOLO_LIGHT);
+        builder.setTitle("温馨提示");
+        builder.setMessage("您确定要删除该笔子订单？");
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                mData.remove(position);
+                mGoodsAdapter.notifyDataSetChanged();
+                if (mData.size() == 0) {
+                    mTv_no_good.setVisibility(View.VISIBLE);
+                    if (mBt_submit.isShown()) {
+                        mBt_submit.setVisibility(View.GONE);
+                    }
+                }
+                dialog.cancel();
+            }
+        }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        }).create().show();
     }
 
     @Override
@@ -115,6 +164,12 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 }
                 //跳转商品详情界面，携带商品id
                 sendGoodsInfo(goodsid);
+                break;
+            case R.id.bt_submit:
+                //TODO:提交总表到服务器
+
+                break;
+            default:
                 break;
         }
     }
@@ -153,6 +208,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setSum_pric(19000);
                     mData.add(goodsInfo);
                     mGoodsAdapter.notifyDataSetChanged();
+                    mTv_no_good.setVisibility(View.GONE);
+                    if (!mBt_submit.isShown()) {
+                        mBt_submit.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         }
