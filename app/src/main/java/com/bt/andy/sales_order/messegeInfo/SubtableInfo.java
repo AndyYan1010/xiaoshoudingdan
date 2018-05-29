@@ -28,9 +28,7 @@ public class SubtableInfo {
     private int    number;        //下单台数
     private double zh_unit_price;//折后单价
     private double sum_pric;    //合计费用
-    private String type;        //订单类型
     private String remark;      //备注
-    private String address;     //地址
 
     public String getGoodsName() {
         return goodsName;
@@ -80,27 +78,11 @@ public class SubtableInfo {
         this.sum_pric = sum_pric;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public String getRemark() {
         return remark;
     }
 
     public void setRemark(String remark) {
         this.remark = remark;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 }

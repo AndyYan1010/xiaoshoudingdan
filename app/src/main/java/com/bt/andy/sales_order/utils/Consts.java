@@ -6,4 +6,6 @@ public class Consts {
     public static String Login = "Login";
     //查询接口
     public static String JA_select = "JA_select";
+    //下单接口
+    public static String ORDER = "";
 }

@@ -21,6 +21,8 @@ import android.widget.TextView;
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
+import com.bt.andy.sales_order.messegeInfo.Order;
+import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
@@ -29,7 +31,10 @@ import com.bt.andy.sales_order.utils.ToastUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -295,6 +300,82 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 e.printStackTrace();
             }
             dialog.dismiss();
+        }
+    }
+
+    class SubmitTask extends AsyncTask<Void,String,String>{
+        Order order;
+
+        SubmitTask(Order order){
+            this.order = order;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                //表头
+                Document document = DocumentHelper.createDocument();
+                Element rootElement = document.addElement("NewDataSet");
+                Element cust = rootElement.addElement("Cust");
+                //会员名
+                cust.addElement("").setText(order.getUsername());
+                //会员手机号
+                cust.addElement("").setText(order.getUsermobile());
+                //业务类型
+                cust.addElement("").setText(order.getBusinesstype());
+
+                //表体
+                Document document2 = DocumentHelper.createDocument();
+                Element rootElement2 = document2.addElement("NewDataSet");
+                for (SubtableInfo info : order.getSubList()) {
+                    Element cust2 = rootElement2.addElement("Cust");
+                    //商品代码
+                    cust2.addElement("").setText(info.getGoodsid());
+                    //数量
+                    cust2.addElement("").setText(String.valueOf(info.getNumber()));
+                    //折后单价
+                    cust2.addElement("").setText(String.valueOf(info.getZh_unit_price()));
+                    //金额
+                    cust2.addElement("").setText(String.valueOf(info.getSum_pric()));
+                    //备注
+                    cust2.addElement("").setText(info.getRemark());
+                }
+                OutputFormat outputFormat = OutputFormat.createPrettyPrint();
+                outputFormat.setSuppressDeclaration(false);
+                outputFormat.setNewlines(false);
+                StringWriter stringWriter = new StringWriter();
+                StringWriter stringWriter2 = new StringWriter();
+                // xmlWriter是用来把XML文档写入字符串的(工具)
+                XMLWriter xmlWriter = new XMLWriter(stringWriter, outputFormat);
+                XMLWriter xmlWriter2 = new XMLWriter(stringWriter2, outputFormat);
+                // 把创建好的XML文档写入字符串
+                xmlWriter.write(document);
+                xmlWriter2.write(document2);
+                String fbtouxml = stringWriter.toString().substring(38);
+                String fbtixml = stringWriter2.toString().substring(38);
+                Map<String,String> map = new HashMap<>();
+                map.put("",fbtouxml);
+                map.put("",fbtixml);
+                return SoapUtil.requestWebService(Consts.ORDER,map);
+            }catch(Exception e){
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if(s.equals("成功")){
+                ToastUtils.showToast(GoodsDetailActivity.this,"提交成功");
+            }else{
+                ToastUtils.showToast(GoodsDetailActivity.this,"提交失败");
+            }
         }
     }
 }
