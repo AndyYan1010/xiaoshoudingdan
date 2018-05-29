@@ -128,6 +128,37 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
 
             }
         });
+        mEdit_discount.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String discount = String.valueOf(mEdit_discount.getText()).trim();
+                double price;
+                if ("".equals(discount)) {
+                    price = 0;
+                } else {
+                    price = Double.parseDouble(discount);
+                }
+                goods_price = price;
+                String snum = String.valueOf(mEdit_num.getText()).trim();
+                int number;
+                if (null == snum || "".equals(snum)) {
+                    number = 1;
+                } else {
+                    number = Integer.valueOf(snum);
+                }
+                mTv_sumprice.setText("" + goods_price * number);
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         mBt_submit.setOnClickListener(this);
     }
 
