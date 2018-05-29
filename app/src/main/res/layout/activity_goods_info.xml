@@ -164,15 +164,35 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="2"
                         android:orientation="horizontal">
+                        <TextView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="@drawable/frame_black_line_left_round"
+                            android:gravity="center"
+                            android:text="¥"
+                            android:textColor="@color/black"
+                            android:textSize="18sp"/>
 
                         <EditText
                             android:id="@+id/edit_discount"
-                            android:layout_width="160dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="40dp"
-                            android:background="@drawable/bg_round_frame"
+                            android:background="@drawable/frame_black_line_right_round"
+                            android:digits="0123456789."
                             android:gravity="center"
-                            android:text="¥1900"
+                            android:maxLength="8"
+                            android:minWidth="120dp"
+                            android:text="1000"
+                            android:textColor="@color/orange"
                             android:textSize="18sp"/>
+                        <!--<EditText-->
+                            <!--android:id="@+id/edit_discount"-->
+                            <!--android:layout_width="160dp"-->
+                            <!--android:layout_height="40dp"-->
+                            <!--android:background="@drawable/bg_round_frame"-->
+                            <!--android:gravity="center"-->
+                            <!--android:text="¥1900"-->
+                            <!--android:textSize="18sp"/>-->
                     </LinearLayout>
                 </LinearLayout>
 
@@ -190,15 +210,23 @@
                         android:text="合计："
                         android:textColor="@color/white"
                         android:textSize="18sp"/>
-
                     <TextView
-                        android:id="@+id/tv_sumprice"
+                        android:id="@+id/tv_fhao"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_centerVertical="true"
                         android:layout_marginLeft="10dp"
                         android:layout_toRightOf="@+id/tv_mark"
-                        android:text="¥1900"
+                        android:text="¥"
+                        android:textColor="@color/red"
+                        android:textSize="20sp"/>
+                    <TextView
+                        android:id="@+id/tv_sumprice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_toRightOf="@+id/tv_fhao"
+                        android:text="1000"
                         android:textColor="@color/red"
                         android:textSize="20sp"/>
 
@@ -213,45 +241,6 @@
                         android:textColor="@color/blue_87"
                         android:textSize="18sp"/>
                 </RelativeLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="20dp"
-                android:background="@drawable/bg_white_round"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingBottom="5dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:paddingTop="5dp">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginRight="5dp"
-                    android:src="@drawable/distribution"/>
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_weight="2"
-                    android:text="订单类型："
-                    android:textColor="@color/black"
-                    android:textSize="18sp"/>
-
-                <Spinner
-                    android:id="@+id/spinner"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:spinnerMode="dialog">
-                </Spinner>
             </LinearLayout>
 
             <LinearLayout
@@ -284,43 +273,6 @@
 
                 <EditText
                     android:id="@+id/edit_remarks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:background="@null"
-                    android:hint="..."/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/bg_white_round"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingBottom="5dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="10dp"
-                android:paddingTop="5dp">
-
-                <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
-                    android:layout_marginRight="5dp"
-                    android:src="@drawable/address"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:text="地址："
-                    android:textColor="@color/black"
-                    android:textSize="18sp"/>
-
-                <EditText
-                    android:id="@+id/edit_address"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"

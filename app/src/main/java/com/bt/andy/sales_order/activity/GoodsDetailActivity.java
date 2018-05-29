@@ -11,18 +11,13 @@ import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
-import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
-import com.bt.andy.sales_order.messegeInfo.Order;
-import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
@@ -31,14 +26,9 @@ import com.bt.andy.sales_order.utils.ToastUtils;
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
-import org.dom4j.io.OutputFormat;
-import org.dom4j.io.XMLWriter;
 
-import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,17 +51,17 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private TextView mTv_reduce;//减法
     private EditText mEdit_num;//购买数量
     private TextView mTv_add;//加法
+    private TextView mTv_unit;//商品单位
     private EditText mEdit_discount;//折后价
     private TextView mTv_sumprice;//子单总金额
     private Button   mBt_sure;//确认
-    private Spinner  mSpinner;//配送类型
     private EditText mEdit_remarks;//备注
-    private EditText mEdit_address;//配送地址
     private Button   mBt_submit;//确定下单
     private double goods_price  = 1000;//折后单价
     private String goodsLocalId = "";
     private Dialog dialog;
     private String mGoodsId;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,12 +84,11 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mTv_reduce = findViewById(R.id.tv_reduce);
         mEdit_num = findViewById(R.id.edit_num);
         mTv_add = findViewById(R.id.tv_add);
+        mTv_unit = findViewById(R.id.tv_unit);
         mEdit_discount = findViewById(R.id.edit_discount);
         mTv_sumprice = findViewById(R.id.tv_sumprice);
         mBt_sure = findViewById(R.id.bt_sure);
-        mSpinner = findViewById(R.id.spinner);
         mEdit_remarks = findViewById(R.id.edit_remarks);
-        mEdit_address = findViewById(R.id.edit_address);
         mBt_submit = findViewById(R.id.bt_submit);
         dialog = new Dialog(this);
     }
@@ -131,30 +120,11 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 } else {
                     number = Integer.valueOf(snum);
                 }
-                mTv_sumprice.setText("¥" + number * goods_price);
+                mTv_sumprice.setText("" + number * goods_price);
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-
-            }
-        });
-        final List<String> mData = new ArrayList();
-        mData.add("选择配送方式");
-        mData.add("配送安装");
-        mData.add("配送不安装");
-        mData.add("自提安装");
-        mData.add("自提不安装");
-        MySpinnerAdapter adapter = new MySpinnerAdapter(GoodsDetailActivity.this, mData);
-        mSpinner.setAdapter(adapter);
-        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String s = mData.get(i);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
 
             }
         });
@@ -202,19 +172,30 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
             case R.id.bt_sure:
                 mTv_reduce.setVisibility(View.GONE);
                 mTv_add.setVisibility(View.GONE);
+                String num = String.valueOf(mEdit_num.getText()).trim();
+                if ("".equals(num)) {
+                    mEdit_num.setText("0");
+                    ToastUtils.showToast(GoodsDetailActivity.this, "数量不能为0");
+                    return;
+                }
                 mEdit_num.setBackground(getResources().getDrawable(R.drawable.bg_round_frame));
                 mEdit_num.setPadding(10, 5, 10, 5);
                 mEdit_num.setEnabled(false);
                 mEdit_discount.setEnabled(false);
                 break;
             case R.id.bt_submit:
+                String remark = String.valueOf(mEdit_remarks.getText()).trim();
+                if ("...".equals(remark)) {
+                    remark = "";
+                }
                 Intent intent = new Intent();
                 intent.putExtra("orderDetail", "1");
-                intent.putExtra("goodsName", String.valueOf(mTv_name1.getText()));
-                intent.putExtra("unitPrice", String.valueOf(mEdit_discount.getText()));
-                intent.putExtra("number", String.valueOf(mEdit_num.getText()));
-                intent.putExtra("sumPrice", String.valueOf(mTv_sumprice.getText()));
+                intent.putExtra("goodsName", String.valueOf(mTv_name1.getText()).trim());
+                intent.putExtra("unitPrice", goods_price);
+                intent.putExtra("number", String.valueOf(mEdit_num.getText()).trim());
+                intent.putExtra("sumPrice", String.valueOf(mTv_sumprice.getText()).trim());
                 intent.putExtra("goodsLocalId", goodsLocalId);
+                intent.putExtra("subremark", remark);
                 setResult(resultCode, intent);
                 finish();
                 break;
@@ -291,91 +272,16 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 mTv_name2.setText(map.get("fname"));
                 mTv_unit_price.setText("销售单价:" + map.get("fsaleprice") + "元");
                 mTv_stock.setText("库存数量:" + map.get("fqty") + map.get("funit"));
+                mTv_unit.setText(map.get("funit"));
                 goods_price = Double.parseDouble(map.get("fsaleprice"));
-                mEdit_discount.setText("¥" + map.get("fsaleprice"));
-                mTv_sumprice.setText("¥" + map.get("fsaleprice"));
+                mEdit_discount.setText(map.get("fsaleprice"));
+                mTv_sumprice.setText(map.get("fsaleprice"));
                 goodsLocalId = map.get("itemid");
                 ProgressDialogUtil.hideDialog();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             dialog.dismiss();
-        }
-    }
-
-    class SubmitTask extends AsyncTask<Void,String,String>{
-        Order order;
-
-        SubmitTask(Order order){
-            this.order = order;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                //表头
-                Document document = DocumentHelper.createDocument();
-                Element rootElement = document.addElement("NewDataSet");
-                Element cust = rootElement.addElement("Cust");
-                //会员名
-                cust.addElement("").setText(order.getUsername());
-                //会员手机号
-                cust.addElement("").setText(order.getUsermobile());
-                //业务类型
-                cust.addElement("").setText(order.getBusinesstype());
-
-                //表体
-                Document document2 = DocumentHelper.createDocument();
-                Element rootElement2 = document2.addElement("NewDataSet");
-                for (SubtableInfo info : order.getSubList()) {
-                    Element cust2 = rootElement2.addElement("Cust");
-                    //商品代码
-                    cust2.addElement("").setText(info.getGoodsid());
-                    //数量
-                    cust2.addElement("").setText(String.valueOf(info.getNumber()));
-                    //折后单价
-                    cust2.addElement("").setText(String.valueOf(info.getZh_unit_price()));
-                    //金额
-                    cust2.addElement("").setText(String.valueOf(info.getSum_pric()));
-                    //备注
-                    cust2.addElement("").setText(info.getRemark());
-                }
-                OutputFormat outputFormat = OutputFormat.createPrettyPrint();
-                outputFormat.setSuppressDeclaration(false);
-                outputFormat.setNewlines(false);
-                StringWriter stringWriter = new StringWriter();
-                StringWriter stringWriter2 = new StringWriter();
-                // xmlWriter是用来把XML文档写入字符串的(工具)
-                XMLWriter xmlWriter = new XMLWriter(stringWriter, outputFormat);
-                XMLWriter xmlWriter2 = new XMLWriter(stringWriter2, outputFormat);
-                // 把创建好的XML文档写入字符串
-                xmlWriter.write(document);
-                xmlWriter2.write(document2);
-                String fbtouxml = stringWriter.toString().substring(38);
-                String fbtixml = stringWriter2.toString().substring(38);
-                Map<String,String> map = new HashMap<>();
-                map.put("",fbtouxml);
-                map.put("",fbtixml);
-                return SoapUtil.requestWebService(Consts.ORDER,map);
-            }catch(Exception e){
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-            if(s.equals("成功")){
-                ToastUtils.showToast(GoodsDetailActivity.this,"提交成功");
-            }else{
-                ToastUtils.showToast(GoodsDetailActivity.this,"提交失败");
-            }
         }
     }
 }

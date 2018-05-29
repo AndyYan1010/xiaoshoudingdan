@@ -6,6 +6,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -17,20 +18,35 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.activity.GoodsDetailActivity;
 import com.bt.andy.sales_order.adapter.LvGoodsAdapter;
+import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
+import com.bt.andy.sales_order.messegeInfo.Order;
 import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
+import com.bt.andy.sales_order.utils.Consts;
+import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
 import com.bt.andy.sales_order.viewmodle.MyListView;
 import com.uuzuche.lib_zxing.activity.CaptureActivity;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
 
+import org.dom4j.Document;
+import org.dom4j.DocumentHelper;
+import org.dom4j.Element;
+import org.dom4j.io.OutputFormat;
+import org.dom4j.io.XMLWriter;
+
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @创建者 AndyYan
@@ -52,10 +68,15 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private int REQUEST_CODE                       = 1002;//接收扫描结果
     private int DETAIL_REQUESTCODE                 = 111;//商品详情页返回参数对应码
     private int ORDER_RESULT_CODE                  = 9527;//商品详情页返回结果码
-    private MyListView         mLv_goods;
-    private List<SubtableInfo> mData;//存放每个子表的数据
-    private LvGoodsAdapter     mGoodsAdapter;
-    private Button             mBt_submit;
+    private       MyListView         mLv_goods;
+    public static List<SubtableInfo> mData;//存放每个子表的数据
+    private       LvGoodsAdapter     mGoodsAdapter;
+    private       Spinner            mSpinner;//配送类型选择条目
+    private       String             deliveryType;//配送类型
+    private       EditText           mEdit_address;//配送地址
+    private       Button             mBt_submit;
+    private       LinearLayout       mLinear_type;
+    private       LinearLayout       mLinear_address;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -77,6 +98,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mTv_surema = mRootView.findViewById(R.id.tv_surema);//确认输入的商品id
         mTv_no_good = mRootView.findViewById(R.id.tv_no_good);//提示未添加商品
         mLv_goods = mRootView.findViewById(R.id.lv_goods);//商品列表
+        mLinear_type = mRootView.findViewById(R.id.linear_type);//选择配送类型布局
+        mSpinner = mRootView.findViewById(R.id.spinner);//配送类型选择条目
+        mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
+        mEdit_address = mRootView.findViewById(R.id.edit_address);//配送地址
         mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
     }
 
@@ -103,8 +128,29 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 return false;
             }
         });
+        final List<String> mPsData = new ArrayList();
+        mPsData.add("选择配送方式");
+        mPsData.add("配送安装");
+        mPsData.add("配送不安装");
+        mPsData.add("自提安装");
+        mPsData.add("自提不安装");
+        MySpinnerAdapter adapter = new MySpinnerAdapter(getContext(), mPsData);
+        mSpinner.setAdapter(adapter);
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                deliveryType = mPsData.get(i);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         mBt_submit.setOnClickListener(this);
         mBt_submit.setVisibility(View.GONE);
+        mLinear_type.setVisibility(View.GONE);
+        mLinear_address.setVisibility(View.GONE);
     }
 
     private void showDeleteDailog(final int position) {
@@ -122,6 +168,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     if (mBt_submit.isShown()) {
                         mBt_submit.setVisibility(View.GONE);
                     }
+                    mLinear_type.setVisibility(View.GONE);
+                    mLinear_address.setVisibility(View.GONE);
                 }
                 dialog.cancel();
             }
@@ -166,8 +214,34 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 sendGoodsInfo(goodsid);
                 break;
             case R.id.bt_submit:
+                String phone = String.valueOf(mEdit_phone.getText()).trim();
+                String name = String.valueOf(mEdit_name.getText()).trim();
+                String address = String.valueOf(mEdit_address.getText()).trim();
+                if ("".equals(phone) || "手机号".equals(phone)) {
+                    ToastUtils.showToast(getContext(), "请填写会员手机号");
+                    return;
+                }
+                if ("".equals(name) || "会员名".equals(name)) {
+                    ToastUtils.showToast(getContext(), "请填写会员名");
+                    return;
+                }
+                if ("".equals(deliveryType) || "选择配送方式".equals(deliveryType)) {
+                    ToastUtils.showToast(getContext(), "请选择配送方式");
+                    return;
+                }
+                if ("".equals(address) || "...".equals(address)) {
+                    ToastUtils.showToast(getContext(), "请选填写送货地址");
+                    return;
+                }
                 //TODO:提交总表到服务器
-
+                Order order = new Order();
+                order.setMembermobile(phone);
+                order.setMembername(name);
+                order.setBusinesstype(deliveryType);
+                order.setAddress(address);
+                order.setSubList(mData);
+                SubmitTask submitTask = new SubmitTask(order);
+                submitTask.execute();
                 break;
             default:
                 break;
@@ -206,15 +280,20 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     int number = Integer.parseInt(data.getStringExtra("number"));
                     double sumPrice = Double.parseDouble(data.getStringExtra("sumPrice"));
                     String goodsLocalId = data.getStringExtra("goodsLocalId");
+                    String remark = data.getStringExtra("subremark");
                     //填入总表
                     SubtableInfo goodsInfo = new SubtableInfo();
                     goodsInfo.setGoodsName(goodsName);
                     goodsInfo.setZh_unit_price(unit_price);
                     goodsInfo.setNumber(number);
                     goodsInfo.setSum_pric(sumPrice);
+                    goodsInfo.setGoodsid(goodsLocalId);
+                    goodsInfo.setRemark(remark);
                     mData.add(goodsInfo);
                     mGoodsAdapter.notifyDataSetChanged();
                     mTv_no_good.setVisibility(View.GONE);
+                    mLinear_type.setVisibility(View.VISIBLE);
+                    mLinear_address.setVisibility(View.VISIBLE);
                     if (!mBt_submit.isShown()) {
                         mBt_submit.setVisibility(View.VISIBLE);
                     }
@@ -233,7 +312,85 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private void showGoodsDetail(String goodsID) {
         //跳转商品详情
         Intent intent = new Intent(getContext(), GoodsDetailActivity.class);
-        intent.putExtra("goodsId",goodsID);
+        intent.putExtra("goodsId", goodsID);
         startActivityForResult(intent, DETAIL_REQUESTCODE);
+    }
+
+    class SubmitTask extends AsyncTask<Void, String, String> {
+        Order order;
+
+        SubmitTask(Order order) {
+            this.order = order;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            try {
+                //表头
+                Document document = DocumentHelper.createDocument();
+                Element rootElement = document.addElement("NewDataSet");
+                Element cust = rootElement.addElement("Cust");
+                //会员名
+                cust.addElement("").setText(order.getMembername());
+                //会员手机号
+                cust.addElement("").setText(order.getMembermobile());
+                //业务类型
+                cust.addElement("").setText(order.getBusinesstype());
+                //送货地址
+                cust.addElement("").setText(order.getBusinesstype());
+
+                //表体
+                Document document2 = DocumentHelper.createDocument();
+                Element rootElement2 = document2.addElement("NewDataSet");
+                for (SubtableInfo info : order.getSubList()) {
+                    Element cust2 = rootElement2.addElement("Cust");
+                    //商品代码
+                    cust2.addElement("").setText(info.getGoodsid());
+                    //数量
+                    cust2.addElement("").setText(String.valueOf(info.getNumber()));
+                    //折后单价
+                    cust2.addElement("").setText(String.valueOf(info.getZh_unit_price()));
+                    //金额
+                    cust2.addElement("").setText(String.valueOf(info.getSum_pric()));
+                    //备注
+                    cust2.addElement("").setText(info.getRemark());
+                }
+                OutputFormat outputFormat = OutputFormat.createPrettyPrint();
+                outputFormat.setSuppressDeclaration(false);
+                outputFormat.setNewlines(false);
+                StringWriter stringWriter = new StringWriter();
+                StringWriter stringWriter2 = new StringWriter();
+                // xmlWriter是用来把XML文档写入字符串的(工具)
+                XMLWriter xmlWriter = new XMLWriter(stringWriter, outputFormat);
+                XMLWriter xmlWriter2 = new XMLWriter(stringWriter2, outputFormat);
+                // 把创建好的XML文档写入字符串
+                xmlWriter.write(document);
+                xmlWriter2.write(document2);
+                String fbtouxml = stringWriter.toString().substring(38);
+                String fbtixml = stringWriter2.toString().substring(38);
+                Map<String, String> map = new HashMap<>();
+                map.put("", fbtouxml);
+                map.put("", fbtixml);
+                return SoapUtil.requestWebService(Consts.ORDER, map);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (s.equals("成功")) {
+                ToastUtils.showToast(getContext(), "提交成功");
+            } else {
+                ToastUtils.showToast(getContext(), "提交失败");
+            }
+        }
     }
 }

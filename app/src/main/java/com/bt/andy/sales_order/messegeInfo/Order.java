@@ -4,30 +4,30 @@ import java.util.List;
 
 public class Order {
     //会员名
-    private String username;
+    private String             membername;
     //会员手机号
-    private String usermobile;
+    private String             membermobile;
     //业务类型
-    private String businesstype;
+    private String             businesstype;
     //收货地址
-    private String address;
+    private String             address;
     //商品详情
     private List<SubtableInfo> subList;
 
-    public String getUsername() {
-        return username;
+    public String getMembername() {
+        return membername;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setMembername(String membername) {
+        this.membername = membername;
     }
 
-    public String getUsermobile() {
-        return usermobile;
+    public String getMembermobile() {
+        return membermobile;
     }
 
-    public void setUsermobile(String usermobile) {
-        this.usermobile = usermobile;
+    public void setMembermobile(String membermobile) {
+        this.membermobile = membermobile;
     }
 
     public String getBusinesstype() {

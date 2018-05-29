@@ -4,7 +4,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -58,7 +57,19 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.bt_login:
-                new LoginTask(mEdit_num.getText().toString(),mEdit_psd.getText().toString()).execute();
+//                String number = mEdit_num.getText().toString().trim();
+//                String pass = mEdit_psd.getText().toString().trim();
+//                if ("".equals(number)||"请输入工号".equals(number)){
+//                    ToastUtils.showToast(LoginActivity.this,"请输入工号");
+//                    return;
+//                }
+//                if ("".equals(pass)||"请输入密码".equals(pass)){
+//                    ToastUtils.showToast(LoginActivity.this,"请输入密码");
+//                    return;
+//                }
+//                new LoginTask(number,pass).execute();
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
                 break;
         }
     }
