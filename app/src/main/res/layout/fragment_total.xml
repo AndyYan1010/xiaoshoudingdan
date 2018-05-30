@@ -120,7 +120,6 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:background="@drawable/bg_round_frame"
-                        android:digits="0123456789-*."
                         android:drawableLeft="@drawable/bar_code"
                         android:drawablePadding="8dp"
                         android:hint="商品编码"

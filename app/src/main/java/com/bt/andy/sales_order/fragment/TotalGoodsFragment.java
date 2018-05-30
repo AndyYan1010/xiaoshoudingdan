@@ -23,6 +23,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bt.andy.sales_order.MyAppliaction;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.activity.GoodsDetailActivity;
 import com.bt.andy.sales_order.adapter.LvGoodsAdapter;
@@ -235,6 +236,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 }
                 //TODO:提交总表到服务器
                 Order order = new Order();
+                order.setUserId(MyAppliaction.userID);
                 order.setMembermobile(phone);
                 order.setMembername(name);
                 order.setBusinesstype(deliveryType);
@@ -275,8 +277,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String orderInfo = data.getStringExtra("orderDetail");
                 if (null != orderInfo) {
                     String goodsName = data.getStringExtra("goodsName");
-                    String unitPrice = data.getStringExtra("unitPrice");
-                    double unit_price = Double.parseDouble(unitPrice);
+                    double unitPrice = data.getDoubleExtra("unitPrice", 0.00);
+                    //                    double unit_price = Double.parseDouble(unitPrice);
                     int number = Integer.parseInt(data.getStringExtra("number"));
                     double sumPrice = Double.parseDouble(data.getStringExtra("sumPrice"));
                     String goodsLocalId = data.getStringExtra("goodsLocalId");
@@ -284,7 +286,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     //填入总表
                     SubtableInfo goodsInfo = new SubtableInfo();
                     goodsInfo.setGoodsName(goodsName);
-                    goodsInfo.setZh_unit_price(unit_price);
+                    goodsInfo.setZh_unit_price(unitPrice);
                     goodsInfo.setNumber(number);
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
@@ -335,6 +337,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 Document document = DocumentHelper.createDocument();
                 Element rootElement = document.addElement("NewDataSet");
                 Element cust = rootElement.addElement("Cust");
+                //制单人id
+                cust.addElement("").setText(order.getUserId());
                 //会员名
                 cust.addElement("").setText(order.getMembername());
                 //会员手机号
@@ -391,6 +395,28 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
             } else {
                 ToastUtils.showToast(getContext(), "提交失败");
             }
+        }
+    }
+
+    class TypeTask extends AsyncTask<Void,String,String>{//查询订单类型
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select fname,finterid from t_SubMessage where ftypeid=10001";
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
         }
     }
 }
