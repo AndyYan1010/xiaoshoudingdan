@@ -367,8 +367,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String fbtouxml = stringWriter.toString().substring(38);
                 String fbtixml = stringWriter2.toString().substring(38);
                 Map<String, String> map = new HashMap<>();
-                map.put("", fbtouxml);
-                map.put("", fbtixml);
+                map.put("InterID","0");
+                map.put("BillNO","a");
+                map.put("FBtouXMl", fbtouxml);
+                map.put("FBtiXML", fbtixml);
                 return SoapUtil.requestWebService(Consts.ORDER, map);
             } catch (Exception e) {
                 e.printStackTrace();

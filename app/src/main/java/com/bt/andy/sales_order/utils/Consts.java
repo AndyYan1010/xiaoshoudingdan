@@ -7,5 +7,5 @@ public class Consts {
     //查询接口
     public static String JA_select = "JA_select";
     //下单接口
-    public static String ORDER = "";
+    public static String ORDER = "SEOrder";
 }
