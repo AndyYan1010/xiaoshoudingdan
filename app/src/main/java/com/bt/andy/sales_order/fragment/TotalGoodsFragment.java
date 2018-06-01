@@ -89,7 +89,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         initData();
         return mRootView;
     }
-
+    //
     private void initView() {
         mTv_title = mRootView.findViewById(R.id.tv_title);
         mEdit_phone = mRootView.findViewById(R.id.edit_phone);//输入手机号
