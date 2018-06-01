@@ -61,7 +61,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private String goodsLocalId = "";
     private Dialog dialog;
     private String mGoodsId;
-
+    private String mFunitid;//单位的id
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -227,6 +227,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 intent.putExtra("sumPrice", String.valueOf(mTv_sumprice.getText()).trim());
                 intent.putExtra("goodsLocalId", goodsLocalId);
                 intent.putExtra("subremark", remark);
+                intent.putExtra("funitId", mFunitid);
                 setResult(resultCode, intent);
                 finish();
                 break;
@@ -297,17 +298,22 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                     map.put("fsaleprice", recordEle.elementTextTrim("FSalePrice"));//销售单价
                     map.put("fqty", recordEle.elementTextTrim("FQty"));//库存数量
                     map.put("funit", recordEle.elementTextTrim("funit"));//单位
+                    map.put("funitid", recordEle.elementTextTrim("funitid"));//单位id
                 }
                 //填充数据到页面
                 mTv_name1.setText(map.get("fname"));
                 mTv_name2.setText(map.get("fname"));
-                mTv_unit_price.setText("销售单价:" + map.get("fsaleprice") + "元");
-                mTv_stock.setText("库存数量:" + map.get("fqty") + map.get("funit"));
+                double fsaleprice = Double.parseDouble(map.get("fsaleprice"));
+                mTv_unit_price.setText("销售单价:" + fsaleprice + "元");
+                double fqty = Double.parseDouble(map.get("fqty"));
+                mTv_stock.setText("库存数量:" + fqty + map.get("funit"));
                 mTv_unit.setText(map.get("funit"));
                 goods_price = Double.parseDouble(map.get("fsaleprice"));
-                mEdit_discount.setText(map.get("fsaleprice"));
-                mTv_sumprice.setText(map.get("fsaleprice"));
+                mEdit_discount.setText("" + goods_price);
+                double fsaleprice1 = Double.parseDouble(map.get("fsaleprice"));
+                mTv_sumprice.setText("" + fsaleprice1);
                 goodsLocalId = map.get("itemid");
+                mFunitid = map.get("funitid");
                 ProgressDialogUtil.hideDialog();
             } catch (Exception e) {
                 e.printStackTrace();
