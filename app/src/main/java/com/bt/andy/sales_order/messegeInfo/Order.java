@@ -9,6 +9,8 @@ public class Order {
     private String             membername;
     //会员手机号
     private String             membermobile;
+    //积分
+    private String             point;
     //业务类型
     private String             businesstype;
     //收货地址
@@ -38,6 +40,14 @@ public class Order {
 
     public void setMembermobile(String membermobile) {
         this.membermobile = membermobile;
+    }
+
+    public String getPoint() {
+        return point;
+    }
+
+    public void setPoint(String point) {
+        this.point = point;
     }
 
     public String getBusinesstype() {

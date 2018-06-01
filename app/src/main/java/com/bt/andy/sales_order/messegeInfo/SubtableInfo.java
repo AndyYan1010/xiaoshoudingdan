@@ -24,6 +24,7 @@ public class SubtableInfo {
 
     private String goodsName;
     private String goodsid;
+    private String unitid;//单位id
     private double xs_unit_price;//销售单价
     private int    number;        //下单台数
     private double zh_unit_price;//折后单价
@@ -44,6 +45,14 @@ public class SubtableInfo {
 
     public void setGoodsid(String goodsid) {
         this.goodsid = goodsid;
+    }
+
+    public String getUnitid() {
+        return unitid;
+    }
+
+    public void setUnitid(String unitid) {
+        this.unitid = unitid;
     }
 
     public double getXs_unit_price() {

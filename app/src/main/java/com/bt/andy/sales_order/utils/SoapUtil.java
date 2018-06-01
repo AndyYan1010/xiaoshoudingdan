@@ -60,7 +60,7 @@ public class SoapUtil {
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            return "boom!!!\n"+e.getStackTrace();
+            return "0";
         }
     }
 }

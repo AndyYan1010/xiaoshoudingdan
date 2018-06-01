@@ -3,6 +3,7 @@ package com.bt.andy.sales_order.fragment;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -46,6 +47,7 @@ import org.dom4j.io.XMLWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -73,11 +75,12 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     public static List<SubtableInfo> mData;//存放每个子表的数据
     private       LvGoodsAdapter     mGoodsAdapter;
     private       Spinner            mSpinner;//配送类型选择条目
-    private       String             deliveryType;//配送类型
+    private       String             deliveryId;//类型代码,配送类型
     private       EditText           mEdit_address;//配送地址
     private       Button             mBt_submit;
     private       LinearLayout       mLinear_type;
     private       LinearLayout       mLinear_address;
+    private       List<Map<String,String>>       mPsData;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -104,6 +107,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
         mEdit_address = mRootView.findViewById(R.id.edit_address);//配送地址
         mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
+        new TypeTask().execute();//查询出所有业务类型
     }
 
     private void initData() {
@@ -127,25 +131,6 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 //弹出对话框提示用户将要删除该条item
                 showDeleteDailog(i);
                 return false;
-            }
-        });
-        final List<String> mPsData = new ArrayList();
-        mPsData.add("选择配送方式");
-        mPsData.add("配送安装");
-        mPsData.add("配送不安装");
-        mPsData.add("自提安装");
-        mPsData.add("自提不安装");
-        MySpinnerAdapter adapter = new MySpinnerAdapter(getContext(), mPsData);
-        mSpinner.setAdapter(adapter);
-        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                deliveryType = mPsData.get(i);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
             }
         });
         mBt_submit.setOnClickListener(this);
@@ -226,7 +211,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     ToastUtils.showToast(getContext(), "请填写会员名");
                     return;
                 }
-                if ("".equals(deliveryType) || "选择配送方式".equals(deliveryType)) {
+                if ("".equals(deliveryId)) {
                     ToastUtils.showToast(getContext(), "请选择配送方式");
                     return;
                 }
@@ -239,7 +224,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 order.setUserId(MyAppliaction.userID);
                 order.setMembermobile(phone);
                 order.setMembername(name);
-                order.setBusinesstype(deliveryType);
+                order.setBusinesstype(deliveryId);
                 order.setAddress(address);
                 order.setSubList(mData);
                 SubmitTask submitTask = new SubmitTask(order);
@@ -338,15 +323,17 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 Element rootElement = document.addElement("NewDataSet");
                 Element cust = rootElement.addElement("Cust");
                 //制单人id
-                cust.addElement("").setText(order.getUserId());
+                cust.addElement("FBillerID").setText(order.getUserId());
                 //会员名
-                cust.addElement("").setText(order.getMembername());
+                cust.addElement("FHeadSelfS0165").setText(order.getMembername());
                 //会员手机号
-                cust.addElement("").setText(order.getMembermobile());
+                cust.addElement("FHeadSelfS0166").setText(order.getMembermobile());
+                //积分
+                cust.addElement("FHeadSelfS01100").setText(order.getPoint());
                 //业务类型
-                cust.addElement("").setText(order.getBusinesstype());
+                cust.addElement("FHeadSelfS0167").setText(order.getBusinesstype());
                 //送货地址
-                cust.addElement("").setText(order.getBusinesstype());
+                cust.addElement("FDeliveryAddress").setText(order.getBusinesstype());
 
                 //表体
                 Document document2 = DocumentHelper.createDocument();
@@ -354,15 +341,17 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 for (SubtableInfo info : order.getSubList()) {
                     Element cust2 = rootElement2.addElement("Cust");
                     //商品代码
-                    cust2.addElement("").setText(info.getGoodsid());
+                    cust2.addElement("FItemID").setText(info.getGoodsid());
+                    //单位
+                    cust2.addElement("FUnitID").setText(info.getUnitid());
                     //数量
-                    cust2.addElement("").setText(String.valueOf(info.getNumber()));
+                    cust2.addElement("FQty").setText(String.valueOf(info.getNumber()));
                     //折后单价
-                    cust2.addElement("").setText(String.valueOf(info.getZh_unit_price()));
+                    cust2.addElement("FPrice").setText(String.valueOf(info.getZh_unit_price()));
                     //金额
-                    cust2.addElement("").setText(String.valueOf(info.getSum_pric()));
+                    cust2.addElement("FAmount").setText(String.valueOf(info.getSum_pric()));
                     //备注
-                    cust2.addElement("").setText(info.getRemark());
+                    cust2.addElement("fnote").setText(info.getRemark());
                 }
                 OutputFormat outputFormat = OutputFormat.createPrettyPrint();
                 outputFormat.setSuppressDeclaration(false);
@@ -402,6 +391,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            mPsData = new ArrayList();
         }
 
         @Override
@@ -416,7 +406,84 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
+            if(!s.equals("0")){
+                try {
+                    Document doc = DocumentHelper.parseText(s);
+                    Element ele = doc.getRootElement();
+                    Iterator iter = ele.elementIterator("Cust");
+                    while(iter.hasNext()){
+                       Element rec = (Element)iter.next();
+                       String fname = rec.elementTextTrim("fname");
+                       String fitemid = rec.elementTextTrim("finterid");
+                       Map<String,String> map = new HashMap<>();
+                       map.put("fname",fname);
+                       map.put("fitemid",fitemid);
+                       mPsData.add(map);
+                    }
+                    List<String> strList = new ArrayList<>();
+                    for(Map<String,String> map : mPsData){
+                        strList.add(map.get("fname"));
+                    }
+                    MySpinnerAdapter adapter = new MySpinnerAdapter(getContext(), strList);
+                    mSpinner.setAdapter(adapter);
+                    mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            deliveryId = mPsData.get(i).get("fitemid");
+                        }
 
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    class MemberTask extends AsyncTask<Void,String,String>{
+        String fmobile;
+
+        MemberTask(String fmobile){
+            this.fmobile = fmobile;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select fname,fmobile,favailablepoints from icvip where fmobile like '%"+fmobile+"%'";
+            Map<String,String> map = new HashMap<>();
+            map.put("FSql",sql);
+            map.put("FTable","t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select,map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if(!s.equals("0")){
+                try {
+                    Document doc = DocumentHelper.parseText(s);
+                    Element ele = doc.getRootElement();
+                    Iterator iter = ele.elementIterator("Cust");
+                    while(iter.hasNext()){
+                        Element rec = (Element)iter.next();
+                        String fname = rec.elementTextTrim("fname");//名
+                        String fmobile = rec.elementTextTrim("fmobile");//手机号
+                        String fpoints = rec.elementTextTrim("favailablepoints");//积分
+
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }
