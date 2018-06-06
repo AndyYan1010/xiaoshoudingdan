@@ -314,10 +314,12 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 mTv_sumprice.setText("" + fsaleprice1);
                 goodsLocalId = map.get("itemid");
                 mFunitid = map.get("funitid");
-                ProgressDialogUtil.hideDialog();
             } catch (Exception e) {
                 e.printStackTrace();
+                ToastUtils.showToast(GoodsDetailActivity.this, "获取数据解析错误");
+                finish();
             }
+            ProgressDialogUtil.hideDialog();
             dialog.dismiss();
         }
     }

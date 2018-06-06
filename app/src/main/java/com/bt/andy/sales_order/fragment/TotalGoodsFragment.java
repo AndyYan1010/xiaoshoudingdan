@@ -393,6 +393,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 ToastUtils.showToast(getContext(), "提交成功");
                 mData.clear();
                 mGoodsAdapter.notifyDataSetChanged();
+                mLinear_type.setVisibility(View.GONE);
+                mLinear_address.setVisibility(View.GONE);
+                mBt_submit.setVisibility(View.GONE);
             } else {
                 ToastUtils.showToast(getContext(), "提交失败");
             }
