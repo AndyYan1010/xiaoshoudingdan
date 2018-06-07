@@ -275,7 +275,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
 
         @Override
         protected String doInBackground(Void... voids) {
-            String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.fnumber='" + barcode + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
+            String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.fnumber like'%" + barcode + "%' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
             Map<String, String> map = new HashMap<>();
             map.put("FSql", sql);
             map.put("FTable", "t_icitem");
