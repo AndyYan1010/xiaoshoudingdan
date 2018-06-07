@@ -326,7 +326,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
 
     private void sendGoodsInfo(String goodsID) {
         ToastUtils.showToast(getContext(), "商品编码：" + goodsID);
-        mEdit_goods_id.setText(goodsID);
+//        mEdit_goods_id.setText(goodsID);
         //跳转activity，选择添加
         showGoodsDetail(goodsID);
     }

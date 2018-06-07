@@ -30,6 +30,7 @@ import com.bt.andy.sales_order.utils.ToastUtils;
 public class User_F extends Fragment implements View.OnClickListener {
     private View           mRootView;
     private ImageView      mImg_head;//头像
+    private TextView       mTv_name;//员工姓名
     private TextView       mTv_number;//员工号
     private RelativeLayout mRelative_set;//设置条目
     private RelativeLayout mRelative_msg;//消息
@@ -46,6 +47,7 @@ public class User_F extends Fragment implements View.OnClickListener {
     private void initView() {
         mImg_head = mRootView.findViewById(R.id.img_head);
         mTv_number = mRootView.findViewById(R.id.tv_number);
+        mTv_name = mRootView.findViewById(R.id.tv_name);
         mRelative_set = mRootView.findViewById(R.id.relative_set);
         mRelative_msg = mRootView.findViewById(R.id.relative_msg);
         mRelative_exit = mRootView.findViewById(R.id.relative_exit);
@@ -55,7 +57,8 @@ public class User_F extends Fragment implements View.OnClickListener {
         mRelative_set.setOnClickListener(this);
         mRelative_msg.setOnClickListener(this);
         mRelative_exit.setOnClickListener(this);
-        mTv_number.setText(MyAppliaction.userName);
+        mTv_name.setText("姓名：" + MyAppliaction.userName);
+        mTv_number.setText("工号：" + MyAppliaction.memID);
     }
 
     @Override
