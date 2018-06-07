@@ -319,7 +319,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 mFunitid = map.get("funitid");
             } catch (Exception e) {
                 e.printStackTrace();
-                ToastUtils.showToast(GoodsDetailActivity.this, "获取数据解析错误");
+                ToastUtils.showToast(GoodsDetailActivity.this, "未查到此商品");
                 finish();
             }
             ProgressDialogUtil.hideDialog();

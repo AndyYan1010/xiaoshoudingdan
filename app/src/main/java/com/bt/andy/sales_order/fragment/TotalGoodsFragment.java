@@ -30,6 +30,8 @@ import com.bt.andy.sales_order.adapter.LvGoodsAdapter;
 import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
 import com.bt.andy.sales_order.messegeInfo.Order;
 import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
+import com.bt.andy.sales_order.myTools.DropBean;
+import com.bt.andy.sales_order.myTools.DropdownButton;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
@@ -71,18 +73,21 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private int REQUEST_CODE                       = 1002;//接收扫描结果
     private int DETAIL_REQUESTCODE                 = 111;//商品详情页返回参数对应码
     private int ORDER_RESULT_CODE                  = 9527;//商品详情页返回结果码
-    private MyListView                mLv_goods;
-    public  List<SubtableInfo>        mData;//存放每个子表的数据
-    private LvGoodsAdapter            mGoodsAdapter;
-    private Spinner                   mSpinner;//配送类型选择条目
-    private String                    deliveryId;//类型代码,配送类型
-    private EditText                  mEdit_address;//配送地址
-    private Button                    mBt_submit;
-    private LinearLayout              mLinear_type;
-    private LinearLayout              mLinear_address;
-    private List<Map<String, String>> mPsData;
-    private String                    mFpoints;//积分
-    private String                    memberName;//会员名
+    private MyListView                    mLv_goods;
+    public  List<SubtableInfo>            mData;//存放每个子表的数据
+    private LvGoodsAdapter                mGoodsAdapter;
+    private Spinner                       mSpinner;//配送类型选择条目
+    private String                        deliveryId;//类型代码,配送类型
+    private EditText                      mEdit_address;//配送地址
+    private Button                        mBt_submit;
+    private LinearLayout                  mLinear_type;
+    private LinearLayout                  mLinear_address;
+    private List<Map<String, String>>     mPsData;
+    private String                        mFpoints;//积分
+    private String                        memberName;//会员名
+    private List<HashMap<String, String>> mHTot;//记录模糊查询结果（商品名:商品id）
+    private DropdownButton                mDownbt;//下拉框显示模糊查询结果
+    private List<DropBean>                mGoodsNameList;//放置商品名称
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -109,6 +114,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
         mEdit_address = mRootView.findViewById(R.id.edit_address);//配送地址
         mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
+        mDownbt = mRootView.findViewById(R.id.downbt);
         new TypeTask().execute();//查询出所有业务类型
     }
 
@@ -135,10 +141,29 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 return false;
             }
         });
+        //模糊查询结果
+        mGoodsNameList = new ArrayList<DropBean>();
+        mDownbt.setData(mGoodsNameList);
+        mDownbt.setOnDropItemSelectListener(new DropdownButton.OnDropItemSelectListener() {
+            @Override
+            public void onDropItemSelect(int Postion) {
+                if (Postion==0){
+                    ToastUtils.showToast(getContext(),"请选择商品");
+                    return;
+                }
+                HashMap<String, String> goodsMap = mHTot.get(Postion-1);
+                String fnumber = goodsMap.get("fnumber");
+                mDownbt.setChecked(false);
+                mDownbt.setVisibility(View.GONE);
+                //跳转商品详情界面，携带商品id
+                sendGoodsInfo(fnumber);
+            }
+        });
         mBt_submit.setOnClickListener(this);
         mBt_submit.setVisibility(View.GONE);
         mLinear_type.setVisibility(View.GONE);
         mLinear_address.setVisibility(View.GONE);
+        mDownbt.setVisibility(View.GONE);
     }
 
     private void showDeleteDailog(final int position) {
@@ -196,13 +221,15 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 memberTask.execute();
                 break;
             case R.id.tv_surema:
-                String goodsid = String.valueOf(mEdit_goods_id.getText()).trim();
-                if (null == goodsid || "".equals(goodsid) || "商品编码".equals(goodsid)) {
+                String goodsMid = String.valueOf(mEdit_goods_id.getText()).trim();
+                if (null == goodsMid || "".equals(goodsMid) || "商品编码".equals(goodsMid)) {
                     ToastUtils.showToast(getContext(), "请输入商品编码");
                     return;
                 }
+                Task task = new Task(goodsMid);
+                task.execute();
                 //跳转商品详情界面，携带商品id
-                sendGoodsInfo(goodsid);
+//                sendGoodsInfo(goodsid);
                 break;
             case R.id.bt_submit:
                 String phone = String.valueOf(mEdit_phone.getText()).trim();
@@ -311,11 +338,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         startActivityForResult(intent, DETAIL_REQUESTCODE);
     }
 
-    class Task extends AsyncTask<Void, String, String>{
+    class Task extends AsyncTask<Void, String, String> {
         //输入框里获得
         String text;
 
-        public Task(String text){
+        public Task(String text) {
             this.text = text;
         }
 
@@ -327,9 +354,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         @Override
         protected String doInBackground(Void... voids) {
             String sql = "select fnumber,fname from t_icitem where FHelpCode like'%" + text + "%' or fname like '%" + text + "%'";
-            Map<String,String> map = new HashMap<>();
-            map.put("FSql",sql);
-            map.put("FTable","t_icitem");
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
             return SoapUtil.requestWebService(Consts.JA_select, map);
         }
 
@@ -337,20 +364,38 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             try {
+                if (null == mHTot) {
+                    mHTot = new ArrayList();
+                } else {
+                    mHTot.clear();
+                }
                 Document doc = DocumentHelper.parseText(s);
                 Element ele = doc.getRootElement();
                 Iterator iter = ele.elementIterator("Cust");
-                HashMap<String, String> map = new HashMap<>();
                 while (iter.hasNext()) {
+                    HashMap<String, String> map = new HashMap<>();
                     Element recordEle = (Element) iter.next();
                     map.put("fnumber", recordEle.elementTextTrim("fnumber"));//物料条码
                     map.put("fname", recordEle.elementTextTrim("fname"));//物料名称
-
+                    mHTot.add(map);
                 }
                 //填充数据到页面
-
+                mDownbt.setVisibility(View.VISIBLE);
+                if (null == mGoodsNameList) {
+                    mGoodsNameList = new ArrayList<>();
+                } else {
+                    mGoodsNameList.clear();
+                }
+                mGoodsNameList.add(new DropBean("请选择查询结果"));
+                for (HashMap<String, String> map : mHTot) {
+                    String fname = map.get("fname");
+                    mGoodsNameList.add(new DropBean(fname));
+                }
+                mDownbt.setData(mGoodsNameList);
+                mDownbt.setChecked(true);
             } catch (Exception e) {
                 e.printStackTrace();
+                ToastUtils.showToast(getContext(), "未查询到类似商品助记码");
             }
         }
     }
