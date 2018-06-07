@@ -100,7 +100,8 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mTv_title.setText("商品详情");
         ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
         //访问网络，获取详情
-        new ItemTask(mGoodsId).execute();
+        String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.fnumber='" + mGoodsId + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
+        new ItemTask(sql).execute();
 
         mTv_reduce.setOnClickListener(this);
         mTv_add.setOnClickListener(this);
@@ -261,10 +262,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     }
 
     class ItemTask extends AsyncTask<Void, String, String> {
-        String barcode;
+        String sql;
 
-        ItemTask(String barcode) {
-            this.barcode = barcode;
+        ItemTask(String sql) {
+            this.sql = sql;
         }
 
         @Override
@@ -275,7 +276,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
 
         @Override
         protected String doInBackground(Void... voids) {
-            String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.fnumber like'%" + barcode + "%' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
+
             Map<String, String> map = new HashMap<>();
             map.put("FSql", sql);
             map.put("FTable", "t_icitem");
