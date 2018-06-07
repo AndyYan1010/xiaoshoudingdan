@@ -311,6 +311,50 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         startActivityForResult(intent, DETAIL_REQUESTCODE);
     }
 
+    class Task extends AsyncTask<Void, String, String>{
+        //输入框里获得
+        String text;
+
+        public Task(String text){
+            this.text = text;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select fnumber,fname from t_icitem where FHelpCode like'%" + text + "%' or fname like '%" + text + "%'";
+            Map<String,String> map = new HashMap<>();
+            map.put("FSql",sql);
+            map.put("FTable","t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                Document doc = DocumentHelper.parseText(s);
+                Element ele = doc.getRootElement();
+                Iterator iter = ele.elementIterator("Cust");
+                HashMap<String, String> map = new HashMap<>();
+                while (iter.hasNext()) {
+                    Element recordEle = (Element) iter.next();
+                    map.put("fnumber", recordEle.elementTextTrim("fnumber"));//物料条码
+                    map.put("fname", recordEle.elementTextTrim("fname"));//物料名称
+
+                }
+                //填充数据到页面
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     class SubmitTask extends AsyncTask<Void, String, String> {
         Order order;
 

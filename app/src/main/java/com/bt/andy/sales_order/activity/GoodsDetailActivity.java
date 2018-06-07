@@ -280,7 +280,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
 
         @Override
         protected String doInBackground(Void... voids) {
-
             Map<String, String> map = new HashMap<>();
             map.put("FSql", sql);
             map.put("FTable", "t_icitem");
