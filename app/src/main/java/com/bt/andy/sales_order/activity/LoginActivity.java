@@ -105,6 +105,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
             if (s.contains("成功")) {
                 String userid = s.substring(2, s.length());
                 MyAppliaction.userID = userid;
+                MyAppliaction.userName = username;
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 ToastUtils.showToast(LoginActivity.this, "登陆成功");

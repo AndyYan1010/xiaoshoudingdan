@@ -3,7 +3,6 @@ package com.bt.andy.sales_order.fragment;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -32,6 +31,7 @@ import com.bt.andy.sales_order.adapter.MySpinnerAdapter;
 import com.bt.andy.sales_order.messegeInfo.Order;
 import com.bt.andy.sales_order.messegeInfo.SubtableInfo;
 import com.bt.andy.sales_order.utils.Consts;
+import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
 import com.bt.andy.sales_order.viewmodle.MyListView;
@@ -71,16 +71,18 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private int REQUEST_CODE                       = 1002;//接收扫描结果
     private int DETAIL_REQUESTCODE                 = 111;//商品详情页返回参数对应码
     private int ORDER_RESULT_CODE                  = 9527;//商品详情页返回结果码
-    private       MyListView         mLv_goods;
-    public static List<SubtableInfo> mData;//存放每个子表的数据
-    private       LvGoodsAdapter     mGoodsAdapter;
-    private       Spinner            mSpinner;//配送类型选择条目
-    private       String             deliveryId;//类型代码,配送类型
-    private       EditText           mEdit_address;//配送地址
-    private       Button             mBt_submit;
-    private       LinearLayout       mLinear_type;
-    private       LinearLayout       mLinear_address;
-    private       List<Map<String,String>>       mPsData;
+    private MyListView                mLv_goods;
+    public  List<SubtableInfo>        mData;//存放每个子表的数据
+    private LvGoodsAdapter            mGoodsAdapter;
+    private Spinner                   mSpinner;//配送类型选择条目
+    private String                    deliveryId;//类型代码,配送类型
+    private EditText                  mEdit_address;//配送地址
+    private Button                    mBt_submit;
+    private LinearLayout              mLinear_type;
+    private LinearLayout              mLinear_address;
+    private List<Map<String, String>> mPsData;
+    private String                    mFpoints;//积分
+    private String                    memberName;//会员名
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -89,7 +91,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         initData();
         return mRootView;
     }
-    //
+
     private void initView() {
         mTv_title = mRootView.findViewById(R.id.tv_title);
         mEdit_phone = mRootView.findViewById(R.id.edit_phone);//输入手机号
@@ -188,7 +190,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 break;
             case R.id.img_confirm:
                 ToastUtils.showToast(getContext(), "等待网络确认会员号");
-                mTv_entry.setVisibility(View.VISIBLE);
+                String fmobile = String.valueOf(mEdit_phone.getText()).trim();
+                ProgressDialogUtil.startShow(getContext(), "正在查询，请稍等。。。");
+                MemberTask memberTask = new MemberTask(fmobile);
+                memberTask.execute();
                 break;
             case R.id.tv_surema:
                 String goodsid = String.valueOf(mEdit_goods_id.getText()).trim();
@@ -227,6 +232,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 order.setBusinesstype(deliveryId);
                 order.setAddress(address);
                 order.setSubList(mData);
+                order.setPoint(mFpoints);//填写积分
                 SubmitTask submitTask = new SubmitTask(order);
                 submitTask.execute();
                 break;
@@ -268,7 +274,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     double sumPrice = Double.parseDouble(data.getStringExtra("sumPrice"));
                     String goodsLocalId = data.getStringExtra("goodsLocalId");
                     String remark = data.getStringExtra("subremark");
-                    //填入总表
+                    String funitId = data.getStringExtra("funitId");//单位id
+                    //填入总表list中
                     SubtableInfo goodsInfo = new SubtableInfo();
                     goodsInfo.setGoodsName(goodsName);
                     goodsInfo.setZh_unit_price(unitPrice);
@@ -276,6 +283,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
                     goodsInfo.setRemark(remark);
+                    goodsInfo.setUnitid(funitId);
                     mData.add(goodsInfo);
                     mGoodsAdapter.notifyDataSetChanged();
                     mTv_no_good.setVisibility(View.GONE);
@@ -333,7 +341,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 //业务类型
                 cust.addElement("FHeadSelfS0167").setText(order.getBusinesstype());
                 //送货地址
-                cust.addElement("FDeliveryAddress").setText(order.getBusinesstype());
+                cust.addElement("FDeliveryAddress").setText(order.getAddress());
 
                 //表体
                 Document document2 = DocumentHelper.createDocument();
@@ -367,8 +375,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String fbtouxml = stringWriter.toString().substring(38);
                 String fbtixml = stringWriter2.toString().substring(38);
                 Map<String, String> map = new HashMap<>();
-                map.put("InterID","0");
-                map.put("BillNO","a");
+                map.put("InterID", "0");
+                map.put("BillNO", "a");
                 map.put("FBtouXMl", fbtouxml);
                 map.put("FBtiXML", fbtixml);
                 return SoapUtil.requestWebService(Consts.ORDER, map);
@@ -381,15 +389,21 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            if (s.equals("成功")) {
+            if ("成功".equals(s)) {
                 ToastUtils.showToast(getContext(), "提交成功");
+                mData.clear();
+                mGoodsAdapter.notifyDataSetChanged();
+                mLinear_type.setVisibility(View.GONE);
+                mLinear_address.setVisibility(View.GONE);
+                mBt_submit.setVisibility(View.GONE);
             } else {
                 ToastUtils.showToast(getContext(), "提交失败");
             }
         }
     }
 
-    class TypeTask extends AsyncTask<Void,String,String>{//查询订单类型
+    class TypeTask extends AsyncTask<Void, String, String> {//查询订单类型
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -408,22 +422,22 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            if(!s.equals("0")){
+            if (!s.equals("0")) {
                 try {
                     Document doc = DocumentHelper.parseText(s);
                     Element ele = doc.getRootElement();
                     Iterator iter = ele.elementIterator("Cust");
-                    while(iter.hasNext()){
-                       Element rec = (Element)iter.next();
-                       String fname = rec.elementTextTrim("fname");
-                       String fitemid = rec.elementTextTrim("finterid");
-                       Map<String,String> map = new HashMap<>();
-                       map.put("fname",fname);
-                       map.put("fitemid",fitemid);
-                       mPsData.add(map);
+                    while (iter.hasNext()) {
+                        Element rec = (Element) iter.next();
+                        String fname = rec.elementTextTrim("fname");
+                        String fitemid = rec.elementTextTrim("finterid");
+                        Map<String, String> map = new HashMap<>();
+                        map.put("fname", fname);
+                        map.put("fitemid", fitemid);
+                        mPsData.add(map);
                     }
                     List<String> strList = new ArrayList<>();
-                    for(Map<String,String> map : mPsData){
+                    for (Map<String, String> map : mPsData) {
                         strList.add(map.get("fname"));
                     }
                     MySpinnerAdapter adapter = new MySpinnerAdapter(getContext(), strList);
@@ -439,17 +453,17 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
 
                         }
                     });
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    class MemberTask extends AsyncTask<Void,String,String>{
+    class MemberTask extends AsyncTask<Void, String, String> {
         String fmobile;
 
-        MemberTask(String fmobile){
+        MemberTask(String fmobile) {
             this.fmobile = fmobile;
         }
 
@@ -460,31 +474,35 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
 
         @Override
         protected String doInBackground(Void... voids) {
-            String sql = "select fname,fmobile,favailablepoints from icvip where fmobile like '%"+fmobile+"%'";
-            Map<String,String> map = new HashMap<>();
-            map.put("FSql",sql);
-            map.put("FTable","t_icitem");
-            return SoapUtil.requestWebService(Consts.JA_select,map);
+            String sql = "select fname,fmobile,favailablepoints from icvip where fmobile like '%" + fmobile + "%'";
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
         }
 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            if(!s.equals("0")){
+            ProgressDialogUtil.hideDialog();
+            if (!s.equals("0")) {
                 try {
                     Document doc = DocumentHelper.parseText(s);
                     Element ele = doc.getRootElement();
                     Iterator iter = ele.elementIterator("Cust");
-                    while(iter.hasNext()){
-                        Element rec = (Element)iter.next();
-                        String fname = rec.elementTextTrim("fname");//名
+                    while (iter.hasNext()) {
+                        Element rec = (Element) iter.next();
                         String fmobile = rec.elementTextTrim("fmobile");//手机号
-                        String fpoints = rec.elementTextTrim("favailablepoints");//积分
-
+                        memberName = rec.elementTextTrim("fname");//名
+                        mEdit_name.setText(memberName);
+                        //积分
+                        mFpoints = rec.elementTextTrim("favailablepoints");
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
+            } else {
+                ToastUtils.showToast(getContext(), "查询失败，未获取到相关会员信息");
             }
         }
     }

@@ -11,7 +11,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
+import com.bt.andy.sales_order.MyAppliaction;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.activity.LoginActivity;
 import com.bt.andy.sales_order.utils.ToastUtils;
@@ -28,7 +30,7 @@ import com.bt.andy.sales_order.utils.ToastUtils;
 public class User_F extends Fragment implements View.OnClickListener {
     private View           mRootView;
     private ImageView      mImg_head;//头像
-    private View           mTv_number;//员工号
+    private TextView       mTv_number;//员工号
     private RelativeLayout mRelative_set;//设置条目
     private RelativeLayout mRelative_msg;//消息
     private RelativeLayout mRelative_exit;//退出
@@ -53,6 +55,7 @@ public class User_F extends Fragment implements View.OnClickListener {
         mRelative_set.setOnClickListener(this);
         mRelative_msg.setOnClickListener(this);
         mRelative_exit.setOnClickListener(this);
+        mTv_number.setText(MyAppliaction.userName);
     }
 
     @Override
