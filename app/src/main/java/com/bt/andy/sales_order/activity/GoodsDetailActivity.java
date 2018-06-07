@@ -100,7 +100,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mTv_title.setText("商品详情");
         ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
         //访问网络，获取详情
+        //根据扫描的代码查询
         String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.fnumber='" + mGoodsId + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
+        //根据助记码或者名称模糊查询
+        //String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.FHelpCode like'%" + mGoodsId + "%' or a.fname like '%" + mGoodsId + "%' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
         new ItemTask(sql).execute();
 
         mTv_reduce.setOnClickListener(this);
