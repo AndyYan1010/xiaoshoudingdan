@@ -108,7 +108,12 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
                 String userid = sId.substring(2, sId.length());
                 MyAppliaction.userID = userid;//用户id
                 MyAppliaction.memID = username;//工号
-                MyAppliaction.userName = split[1];//用户姓名
+                if (split.length >= 2) {
+                    MyAppliaction.userName = split[1];//用户姓名
+                } else {
+                    MyAppliaction.userName = "";//用户姓名
+                    ToastUtils.showToast(LoginActivity.this, "系统中未填写姓名");
+                }
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 ToastUtils.showToast(LoginActivity.this, "登陆成功");
