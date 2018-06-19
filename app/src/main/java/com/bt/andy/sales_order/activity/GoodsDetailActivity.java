@@ -101,7 +101,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
         //访问网络，获取详情
         //根据扫描的代码查询
-        String sql = "select top 1 isnull(d.fprice,0),a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID left join (select FPrice,FItemID,FBegDate from ICPrcPlyEntry ) d on a.fitemid=d.fitemid where a.fnumber='" + mGoodsId + "' order by d.FBegDate desc group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
+        String sql = "select top 1 isnull(d.fprice,0) fprice,a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID left join (select FPrice,FItemID,FBegDate from ICPrcPlyEntry ) d on a.fitemid=d.fitemid where a.fnumber='" + mGoodsId + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid,d.fprice,d.FBegDate order by d.FBegDate desc";
         //根据助记码或者名称模糊查询
         //String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.FHelpCode like'%" + mGoodsId + "%' or a.fname like '%" + mGoodsId + "%' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
         new ItemTask(sql).execute();
@@ -312,7 +312,8 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 double fqty = Double.parseDouble(map.get("fqty"));
                 mTv_stock.setText("库存数量:" + fqty + map.get("funit"));
                 mTv_unit.setText(map.get("funit"));
-                goods_price = Double.parseDouble(map.get("fsaleprice"));
+//                goods_price = Double.parseDouble(map.get("fsaleprice"));
+                goods_price = Double.parseDouble(map.get("fprice"));
                 mEdit_discount.setText("" + goods_price);
                 double fsaleprice1 = Double.parseDouble(map.get("fsaleprice"));
                 mTv_sumprice.setText("" + fsaleprice1);

@@ -449,6 +449,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     cust2.addElement("FAmount").setText(String.valueOf(info.getSum_pric()));
                     //备注
                     cust2.addElement("fnote").setText(info.getRemark());
+                    //折后价格
+                    cust2.addElement("FAmountDiscount").setText(String.valueOf(info.getSum_pric()));
+                    //折后单价
+                    cust2.addElement("FPriceDiscount").setText(String.valueOf(info.getZh_unit_price()));
                 }
                 OutputFormat outputFormat = OutputFormat.createPrettyPrint();
                 outputFormat.setSuppressDeclaration(false);
@@ -589,6 +593,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    ToastUtils.showToast(getContext(), "查询失败，未获取到会员信息");
                 }
             } else {
                 ToastUtils.showToast(getContext(), "查询失败，未获取到相关会员信息");
