@@ -64,7 +64,7 @@ import java.util.Map;
 
 public class TotalGoodsFragment extends Fragment implements View.OnClickListener {
     private View     mRootView;
-    private TextView mTv_title;
+    private TextView mTv_title, mTv_sum_price;
     private EditText mEdit_phone, mEdit_name, mEdit_goods_id;
     private ImageView mImg_delete, mImg_confirm;
     private TextView mTv_entry, mTv_surema, mTv_no_good;
@@ -80,6 +80,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private String                        deliveryId;//类型代码,配送类型
     private EditText                      mEdit_address;//配送地址
     private Button                        mBt_submit;
+    private LinearLayout                  mLinear_sum;//总金额
     private LinearLayout                  mLinear_type;
     private LinearLayout                  mLinear_address;
     private List<Map<String, String>>     mPsData;
@@ -88,6 +89,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private List<HashMap<String, String>> mHTot;//记录模糊查询结果（商品名:商品id）
     private DropdownButton                mDownbt;//下拉框显示模糊查询结果
     private List<DropBean>                mGoodsNameList;//放置商品名称
+    private double                        mTotalPrice;//记录总金额
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -109,6 +111,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mTv_surema = mRootView.findViewById(R.id.tv_surema);//确认输入的商品id
         mTv_no_good = mRootView.findViewById(R.id.tv_no_good);//提示未添加商品
         mLv_goods = mRootView.findViewById(R.id.lv_goods);//商品列表
+        mLinear_sum = mRootView.findViewById(R.id.linear_sum);//总金额
+        mTv_sum_price = mRootView.findViewById(R.id.tv_sum_price);//总金额计价
         mLinear_type = mRootView.findViewById(R.id.linear_type);//选择配送类型布局
         mSpinner = mRootView.findViewById(R.id.spinner);//配送类型选择条目
         mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
@@ -147,11 +151,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mDownbt.setOnDropItemSelectListener(new DropdownButton.OnDropItemSelectListener() {
             @Override
             public void onDropItemSelect(int Postion) {
-                if (Postion==0){
-                    ToastUtils.showToast(getContext(),"请选择商品");
+                if (Postion == 0) {
+                    ToastUtils.showToast(getContext(), "请选择商品");
                     return;
                 }
-                HashMap<String, String> goodsMap = mHTot.get(Postion-1);
+                HashMap<String, String> goodsMap = mHTot.get(Postion - 1);
                 String fnumber = goodsMap.get("fnumber");
                 mDownbt.setChecked(false);
                 mDownbt.setVisibility(View.GONE);
@@ -161,6 +165,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         });
         mBt_submit.setOnClickListener(this);
         mBt_submit.setVisibility(View.GONE);
+        mLinear_sum.setVisibility(View.GONE);
         mLinear_type.setVisibility(View.GONE);
         mLinear_address.setVisibility(View.GONE);
         mDownbt.setVisibility(View.GONE);
@@ -181,8 +186,14 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     if (mBt_submit.isShown()) {
                         mBt_submit.setVisibility(View.GONE);
                     }
+                    mLinear_sum.setVisibility(View.GONE);
                     mLinear_type.setVisibility(View.GONE);
                     mLinear_address.setVisibility(View.GONE);
+                }else {
+                    mTotalPrice = 0;
+                    for (SubtableInfo info : mData) {
+                        mTotalPrice = mTotalPrice + info.getSum_pric();
+                    }
                 }
                 dialog.cancel();
             }
@@ -229,7 +240,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 Task task = new Task(goodsMid);
                 task.execute();
                 //跳转商品详情界面，携带商品id
-//                sendGoodsInfo(goodsid);
+                //                sendGoodsInfo(goodsid);
                 break;
             case R.id.bt_submit:
                 String phone = String.valueOf(mEdit_phone.getText()).trim();
@@ -314,6 +325,12 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     mData.add(goodsInfo);
                     mGoodsAdapter.notifyDataSetChanged();
                     mTv_no_good.setVisibility(View.GONE);
+                    mLinear_sum.setVisibility(View.VISIBLE);
+                    mTotalPrice = 0;
+                    for (SubtableInfo info : mData) {
+                        mTotalPrice = mTotalPrice + info.getSum_pric();
+                    }
+                    mTv_sum_price.setText("¥" + mTotalPrice);
                     mLinear_type.setVisibility(View.VISIBLE);
                     mLinear_address.setVisibility(View.VISIBLE);
                     if (!mBt_submit.isShown()) {
@@ -326,7 +343,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
 
     private void sendGoodsInfo(String goodsID) {
         ToastUtils.showToast(getContext(), "商品编码：" + goodsID);
-//        mEdit_goods_id.setText(goodsID);
+        //        mEdit_goods_id.setText(goodsID);
         //跳转activity，选择添加
         showGoodsDetail(goodsID);
     }
@@ -486,6 +503,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 ToastUtils.showToast(getContext(), "提交成功");
                 mData.clear();
                 mGoodsAdapter.notifyDataSetChanged();
+                mLinear_sum.setVisibility(View.GONE);
                 mLinear_type.setVisibility(View.GONE);
                 mLinear_address.setVisibility(View.GONE);
                 mBt_submit.setVisibility(View.GONE);
