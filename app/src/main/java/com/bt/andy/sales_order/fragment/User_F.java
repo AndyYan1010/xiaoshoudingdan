@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.bt.andy.sales_order.MyAppliaction;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.activity.LoginActivity;
+import com.bt.andy.sales_order.activity.meActivity.SaleFormActivity;
 import com.bt.andy.sales_order.utils.ToastUtils;
 
 /**
@@ -34,6 +35,7 @@ public class User_F extends Fragment implements View.OnClickListener {
     private TextView       mTv_number;//员工号
     private RelativeLayout mRelative_set;//设置条目
     private RelativeLayout mRelative_msg;//消息
+    private RelativeLayout mRelative_form;//销售报表
     private RelativeLayout mRelative_exit;//退出
 
     @Override
@@ -50,12 +52,14 @@ public class User_F extends Fragment implements View.OnClickListener {
         mTv_name = mRootView.findViewById(R.id.tv_name);
         mRelative_set = mRootView.findViewById(R.id.relative_set);
         mRelative_msg = mRootView.findViewById(R.id.relative_msg);
+        mRelative_form = mRootView.findViewById(R.id.relative_form);
         mRelative_exit = mRootView.findViewById(R.id.relative_exit);
     }
 
     private void initData() {
         mRelative_set.setOnClickListener(this);
         mRelative_msg.setOnClickListener(this);
+        mRelative_form.setOnClickListener(this);
         mRelative_exit.setOnClickListener(this);
         mTv_name.setText("姓名：" + MyAppliaction.userName);
         mTv_number.setText("工号：" + MyAppliaction.memID);
@@ -69,6 +73,10 @@ public class User_F extends Fragment implements View.OnClickListener {
                 break;
             case R.id.relative_msg:
                 ToastUtils.showToast(getContext(), "暂未开放");
+                break;
+            case R.id.relative_form:
+                Intent intent = new Intent(getContext(), SaleFormActivity.class);
+                startActivity(intent);
                 break;
             case R.id.relative_exit:
                 exitLogin();

@@ -32,6 +32,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.meActivity.SettingActivity"/>
+        <activity android:name=".activity.meActivity.SaleFormActivity"/>
+        <activity android:name=".activity.meActivity.FormDetailActivity"/>
         <activity android:name=".activity.GoodsDetailActivity"/>
     </application>
 
