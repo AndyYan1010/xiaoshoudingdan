@@ -9,10 +9,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.bt.andy.sales_order.BaseActivity;
+import com.bt.andy.sales_order.MyAppliaction;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.adapter.LvFormAdapter;
 import com.bt.andy.sales_order.messegeInfo.SaleFormInfo;
 import com.bt.andy.sales_order.utils.Consts;
+import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
 
@@ -68,6 +70,7 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
         mData = new ArrayList();
         formAdapter = new LvFormAdapter(SaleFormActivity.this, mData);
         lv_form.setAdapter(formAdapter);
+        ProgressDialogUtil.startShow(SaleFormActivity.this, "正在加载，请稍等...");
         new ZHUTask("").execute();
     }
 
@@ -149,8 +152,12 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
             // 指定WebService的命名空间和调用的方法名
             SoapObject rpc = new SoapObject(nameSpace, methodName);
             // 设置需调用WebService接口需要传入的两个参数mobileCode、userId
-            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166" +
-                    " from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on c.fitemid=b.fitemid";
+            //            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166" +
+            //                    " from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on c.fitemid=b.fitemid";
+
+            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166," +
+                    "d.fname  from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on " +
+                    "c.fitemid=b.fitemid inner join t_user d on d.fuserid=a.fbillerid" + " where d.fname='" + MyAppliaction.memID + "'";
             Log.i("主表查询语句", sql);
             rpc.addProperty("FSql", sql);
             rpc.addProperty("FTable", "t_Currency");
@@ -216,6 +223,7 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             System.out.println(s);
+            ProgressDialogUtil.hideDialog();
             formAdapter.notifyDataSetChanged();
         }
     }

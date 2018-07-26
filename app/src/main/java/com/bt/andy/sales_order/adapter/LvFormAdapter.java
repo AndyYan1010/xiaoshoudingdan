@@ -68,7 +68,7 @@ public class LvFormAdapter extends BaseAdapter {
         viewHolder.tv_billno.setText(fbillno);
         viewHolder.tv_name.setText(name);
         viewHolder.tv_unit_price.setText(unit_price);
-        viewHolder.tv_num.setText(num);
+        viewHolder.tv_num.setText("x" + num);
         viewHolder.tv_total.setText(sum);
         return view;
     }
