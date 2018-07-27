@@ -2,6 +2,7 @@ package com.bt.andy.sales_order.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
@@ -12,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -19,12 +21,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bt.andy.sales_order.R;
+import com.bt.andy.sales_order.adapter.LvStockAdapter;
+import com.bt.andy.sales_order.messegeInfo.StockInfo;
 import com.bt.andy.sales_order.myTools.DropBean;
 import com.bt.andy.sales_order.myTools.DropdownButton;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
+import com.bt.andy.sales_order.viewmodle.MyListView;
 import com.uuzuche.lib_zxing.activity.CaptureActivity;
 import com.uuzuche.lib_zxing.activity.CodeUtils;
 
@@ -32,6 +37,7 @@ import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,15 +59,16 @@ public class Stock_F extends Fragment implements View.OnClickListener {
     private EditText                      edit_goods_id;
     private ImageView                     img_scan;
     private TextView                      tv_surema;
+    private LinearLayout                  linear_drop;
     private DropdownButton                downbt;
-    private TextView                      tv_no_good;
-    private TextView                      tv_name1;
-    private TextView                      tv_stock;
     private List<HashMap<String, String>> mHTot;//记录模糊查询结果（商品名:商品id）
-    private List<DropBean>                mGoodsNameList;//放置商品名称
-    private LinearLayout                  linear_stock;//库存信息模块
-    private int REQUEST_CODE                       = 1002;//接收扫描结果
+    private int REQUEST_CODE = 1002;//接收扫描结果
+    private List<DropBean> mGoodsNameList;//放置商品名称
     private int MY_PERMISSIONS_REQUEST_CALL_PHONE2 = 1001;//申请照相机权限结果
+    private List<StockInfo> mStockInfos;
+    private MyListView      lv_stock;//分库存列表
+    private LvStockAdapter  stockAdapter;
+    private TextView        tv_heji;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -76,11 +83,10 @@ public class Stock_F extends Fragment implements View.OnClickListener {
         edit_goods_id = mRootView.findViewById(R.id.edit_goods_id);
         img_scan = mRootView.findViewById(R.id.img_scan);
         tv_surema = mRootView.findViewById(R.id.tv_surema);
+        tv_heji = mRootView.findViewById(R.id.tv_heji);
+        linear_drop = mRootView.findViewById(R.id.linear_drop);
         downbt = mRootView.findViewById(R.id.downbt);
-        tv_no_good = mRootView.findViewById(R.id.tv_no_good);
-        tv_name1 = mRootView.findViewById(R.id.tv_name1);
-        linear_stock = mRootView.findViewById(R.id.linear_stock);
-        tv_stock = mRootView.findViewById(R.id.tv_stock);
+        lv_stock = mRootView.findViewById(R.id.lv_stock);
     }
 
     private void initData() {
@@ -100,38 +106,35 @@ public class Stock_F extends Fragment implements View.OnClickListener {
                 HashMap<String, String> goodsMap = mHTot.get(Postion - 1);
                 String fnumber = goodsMap.get("fnumber");
                 downbt.setChecked(false);
-                downbt.setVisibility(View.GONE);
+                linear_drop.setVisibility(View.INVISIBLE);
                 //查询商品id，写入商品库存
                 writeGoodsStock(fnumber);
             }
         });
-        downbt.setVisibility(View.GONE);
+        mStockInfos = new ArrayList<>();
+        stockAdapter = new LvStockAdapter(getContext(), mStockInfos);
+        lv_stock.setAdapter(stockAdapter);
+        tv_heji.setVisibility(View.GONE);
+        linear_drop.setVisibility(View.INVISIBLE);
     }
 
-    private void writeGoodsStock(String fnumber) {
-        tv_no_good.setVisibility(View.VISIBLE);
-        linear_stock.setVisibility(View.GONE);
-        //访问网络，获取详情
-        //根据扫描的代码查询
-        String sql = "select top 1 isnull(d.fprice,0) fprice,a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID left join (select FPrice,FItemID,FBegDate from ICPrcPlyEntry ) d on a.fitemid=d.fitemid where a.fnumber='" + fnumber + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid,d.fprice,d.FBegDate order by d.FBegDate desc";
-        //根据助记码或者名称模糊查询
-        new ItemTask(sql).execute();
-    }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.tv_surema:
-                downbt.setVisibility(View.VISIBLE);
-                tv_no_good.setVisibility(View.VISIBLE);
-                linear_stock.setVisibility(View.GONE);
                 String goodsMid = String.valueOf(edit_goods_id.getText()).trim();
+                linear_drop.setVisibility(View.INVISIBLE);
+                tv_heji.setVisibility(View.GONE);
                 if (null == goodsMid || "".equals(goodsMid) || "商品编码".equals(goodsMid)) {
+                    mStockInfos.clear();
+                    stockAdapter.notifyDataSetChanged();
                     ToastUtils.showToast(getContext(), "请输入商品编码");
                     return;
                 }
-                Task task = new Task(goodsMid);
-                task.execute();
+                //查询之前关闭输入法，防止bug
+                hintKeyBoard(edit_goods_id);
+                new Task(goodsMid).execute();
                 break;
             case R.id.img_scan:
                 //动态申请照相机权限
@@ -149,12 +152,16 @@ public class Stock_F extends Fragment implements View.OnClickListener {
         }
     }
 
+    //关闭输入法
+    private void hintKeyBoard(EditText et) {
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(et.getWindowToken(), 0);
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        /**
-         * 处理二维码扫描结果
-         */
+        /** 处理二维码扫描结果*/
         if (requestCode == REQUEST_CODE) {
             //处理扫描结果（在界面上显示）
             if (null != data) {
@@ -164,7 +171,6 @@ public class Stock_F extends Fragment implements View.OnClickListener {
                 }
                 if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_SUCCESS) {
                     String result = bundle.getString(CodeUtils.RESULT_STRING);
-                    downbt.setVisibility(View.VISIBLE);
                     //获取商品信息
                     writeGoodsStock(result);
                 } else if (bundle.getInt(CodeUtils.RESULT_TYPE) == CodeUtils.RESULT_FAILED) {
@@ -172,6 +178,20 @@ public class Stock_F extends Fragment implements View.OnClickListener {
                 }
             }
         }
+    }
+
+    private void writeGoodsStock(String fnumber) {
+        if (null != linear_drop) {
+            linear_drop.setVisibility(View.INVISIBLE);
+        }
+        tv_heji.setVisibility(View.GONE);
+        //访问网络，获取详情
+        //根据扫描的代码查询
+        //String sql = "select top 1 isnull(d.fprice,0) fprice,a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID left join (select FPrice,FItemID,FBegDate from ICPrcPlyEntry ) d on a.fitemid=d.fitemid where a.fnumber='" + fnumber + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid,d.fprice,d.FBegDate order by d.FBegDate desc";
+
+        String sql2 = "select b.fnumber,b.fname,c.fnumber,c.fname,a.FQty,b.FGoodsBarCode from ICInventory a inner join t_ICItem b on a.FItemID=b.FItemID inner join t_Stock c on c.fitemid=a.FStockID  where b.FGoodsBarCode='" + fnumber + "' or b.fnumber='" + fnumber + "'";
+        //根据助记码或者名称模糊查询
+        new ItemTask(sql2).execute();
     }
 
     class Task extends AsyncTask<Void, String, String> {
@@ -189,7 +209,7 @@ public class Stock_F extends Fragment implements View.OnClickListener {
 
         @Override
         protected String doInBackground(Void... voids) {
-            String sql = "select fnumber,fname from t_icitem where FHelpCode like'%" + text + "%' or fname like '%" + text + "%'";
+            String sql = "select fnumber,fname from t_icitem where FHelpCode like'%" + text + "%' or fname like '%" + text + "%' or FGoodsBarCode like '%" + text + "%'";
             Map<String, String> map = new HashMap<>();
             map.put("FSql", sql);
             map.put("FTable", "t_icitem");
@@ -216,7 +236,7 @@ public class Stock_F extends Fragment implements View.OnClickListener {
                     mHTot.add(map);
                 }
                 //填充数据到页面
-                downbt.setVisibility(View.VISIBLE);
+                linear_drop.setVisibility(View.VISIBLE);
                 if (null == mGoodsNameList) {
                     mGoodsNameList = new ArrayList<>();
                 } else {
@@ -261,31 +281,66 @@ public class Stock_F extends Fragment implements View.OnClickListener {
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
             try {
+                if (null == mStockInfos) {
+                    mStockInfos = new ArrayList<>();
+                } else {
+                    mStockInfos.clear();
+                }
+                double sum = 0;
+                DecimalFormat df = new DecimalFormat(".00");
                 Document doc = DocumentHelper.parseText(s);
                 Element ele = doc.getRootElement();
                 Iterator iter = ele.elementIterator("Cust");
                 HashMap<String, String> map = new HashMap<>();
                 while (iter.hasNext()) {
                     Element recordEle = (Element) iter.next();
-                    map.put("itemid", recordEle.elementTextTrim("fitemid"));//物料内码(提交订单用)
                     map.put("fname", recordEle.elementTextTrim("fname"));//物料名称
-                    map.put("fsaleprice", recordEle.elementTextTrim("FSalePrice"));//销售单价
                     map.put("fqty", recordEle.elementTextTrim("FQty"));//库存数量
-                    map.put("funit", recordEle.elementTextTrim("funit"));//单位
-                    map.put("funitid", recordEle.elementTextTrim("funitid"));//单位id
-                    map.put("fprice", recordEle.elementTextTrim("fprice"));//折后单价
+                    map.put("fname1", recordEle.elementTextTrim("fname1"));//仓库
+                    //                    map.put("itemid", recordEle.elementTextTrim("fitemid"));//物料内码(提交订单用)
+                    //                    map.put("fsaleprice", recordEle.elementTextTrim("FSalePrice"));//销售单价
+                    //                    map.put("funit", recordEle.elementTextTrim("funit"));//单位
+                    //                    map.put("funitid", recordEle.elementTextTrim("funitid"));//单位id
+                    //                    map.put("fprice", recordEle.elementTextTrim("fprice"));//折后单价
+                    StockInfo stockInfo = new StockInfo();
+                    stockInfo.setFname(map.get("fname"));//名称
+                    stockInfo.setAddress(map.get("fname1"));//哪个仓库
+                    String fqty = map.get("fqty");//数量（库存量）
+                    double num = Double.parseDouble(fqty);
+                    sum = sum + num;
+                    stockInfo.setFqty(df.format(num));
+                    mStockInfos.add(stockInfo);
+                }
+                if (mStockInfos.size() > 0) {
+                    linear_drop.setVisibility(View.GONE);
+                    tv_heji.setVisibility(View.VISIBLE);
+                    tv_heji.setText("库存合计：" + df.format(sum));
+                } else {
+                    linear_drop.setVisibility(View.INVISIBLE);
+                    tv_heji.setVisibility(View.GONE);
                 }
                 //填充数据到页面
-                tv_no_good.setVisibility(View.GONE);
-                linear_stock.setVisibility(View.VISIBLE);
-                tv_name1.setText(map.get("fname"));
-                double fqty = Double.parseDouble(map.get("fqty"));
-                tv_stock.setText("库存数量:" + fqty + map.get("funit"));
+                stockAdapter.notifyDataSetChanged();
             } catch (Exception e) {
                 e.printStackTrace();
                 ToastUtils.showToast(getContext(), "查询出错,未查到此商品");
             }
             ProgressDialogUtil.hideDialog();
         }
+    }
+
+    /**
+     * 判断字符串中是否含有中文
+     */
+    public static boolean isCNChar(String s) {
+        boolean booleanValue = false;
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c > 128) {
+                booleanValue = true;
+                break;
+            }
+        }
+        return booleanValue;
     }
 }
