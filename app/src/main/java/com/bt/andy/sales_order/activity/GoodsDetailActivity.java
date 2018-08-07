@@ -1,7 +1,6 @@
 package com.bt.andy.sales_order.activity;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -43,11 +42,13 @@ import java.util.Map;
 public class GoodsDetailActivity extends BaseActivity implements View.OnClickListener {
     private ImageView mImg_back;
     private TextView  mTv_title;
+    private ImageView img_noInt;
     private int resultCode = 9527;//设置商品详情返回参数对应码
     private TextView mTv_name1;//商品名
     private TextView mTv_name2;//商品名
     private TextView mTv_unit_price;//单价
     private TextView mTv_stock;//库存
+    private TextView tv_useful;//可用库存
     private TextView mTv_reduce;//减法
     private EditText mEdit_num;//购买数量
     private TextView mTv_add;//加法
@@ -59,7 +60,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private Button   mBt_submit;//确定下单
     private double goods_price  = 1000;//折后单价
     private String goodsLocalId = "";
-    private Dialog dialog;
     private String mGoodsId;
     private String mFunitid;//单位的id
 
@@ -77,9 +77,11 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private void setView() {
         mImg_back = findViewById(R.id.img_back);
         mTv_title = findViewById(R.id.tv_title);
+        img_noInt = (ImageView) findViewById(R.id.img_noInt);
         mTv_name1 = findViewById(R.id.tv_name1);
         mTv_unit_price = findViewById(R.id.tv_unit_price);
         mTv_stock = findViewById(R.id.tv_stock);
+        tv_useful = (TextView) findViewById(R.id.tv_useful);
         mTv_name2 = findViewById(R.id.tv_name2);
         mTv_reduce = findViewById(R.id.tv_reduce);
         mEdit_num = findViewById(R.id.edit_num);
@@ -90,7 +92,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mBt_sure = findViewById(R.id.bt_sure);
         mEdit_remarks = findViewById(R.id.edit_remarks);
         mBt_submit = findViewById(R.id.bt_submit);
-        dialog = new Dialog(this);
     }
 
     private void setData() {
@@ -275,7 +276,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            dialog.show();
         }
 
         @Override
@@ -312,19 +312,71 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 double fqty = Double.parseDouble(map.get("fqty"));
                 mTv_stock.setText("库存数量:" + fqty + map.get("funit"));
                 mTv_unit.setText(map.get("funit"));
-//                goods_price = Double.parseDouble(map.get("fsaleprice"));
+                //                goods_price = Double.parseDouble(map.get("fsaleprice"));
                 goods_price = Double.parseDouble(map.get("fprice"));
                 mEdit_discount.setText("" + goods_price);
                 mTv_sumprice.setText("" + goods_price);
                 goodsLocalId = map.get("itemid");
                 mFunitid = map.get("funitid");
+                String unUrl = "select sum(FAuxQty) from SEOrderEntry where FMrpClosed=0 and FItemID='" + map.get("itemid") + "'";
+                UncloseItemTask uncloseItemTask = new UncloseItemTask(unUrl, fqty, map.get("funit"));
+                uncloseItemTask.execute();
             } catch (Exception e) {
                 e.printStackTrace();
                 ToastUtils.showToast(GoodsDetailActivity.this, "未查到此商品");
                 finish();
             }
+            //            ProgressDialogUtil.hideDialog();
+        }
+    }
+
+    //查询订单未关闭数量
+    class UncloseItemTask extends AsyncTask<Void, String, String> {
+        private String sql;
+        private double sum;
+        private String unit;
+
+        UncloseItemTask(String sql, double sum, String unit) {
+            this.sql = sql;
+            this.sum = sum;
+            this.unit = unit;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                Document doc = DocumentHelper.parseText(s);
+                Element ele = doc.getRootElement();
+                Iterator iter = ele.elementIterator("Cust");
+                HashMap<String, String> map = new HashMap<>();
+                while (iter.hasNext()) {
+                    Element recordEle = (Element) iter.next();
+                    map.put("Column1", recordEle.elementTextTrim("Column1"));//订单未关闭数量
+                }
+                String column1 = map.get("Column1");
+                double unClose = Double.parseDouble(column1);
+                tv_useful.setText("可用库存:" + (sum - unClose) + unit);
+            } catch (Exception e) {
+                e.printStackTrace();
+                ToastUtils.showToast(GoodsDetailActivity.this, "商品可用库存查询失败");
+                finish();
+            }
             ProgressDialogUtil.hideDialog();
-            dialog.dismiss();
+            img_noInt.setVisibility(View.GONE);
         }
     }
 }

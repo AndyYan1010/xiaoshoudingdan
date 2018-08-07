@@ -297,11 +297,6 @@ public class Stock_F extends Fragment implements View.OnClickListener {
                     map.put("fname", recordEle.elementTextTrim("fname"));//物料名称
                     map.put("fqty", recordEle.elementTextTrim("FQty"));//库存数量
                     map.put("fname1", recordEle.elementTextTrim("fname1"));//仓库
-                    //                    map.put("itemid", recordEle.elementTextTrim("fitemid"));//物料内码(提交订单用)
-                    //                    map.put("fsaleprice", recordEle.elementTextTrim("FSalePrice"));//销售单价
-                    //                    map.put("funit", recordEle.elementTextTrim("funit"));//单位
-                    //                    map.put("funitid", recordEle.elementTextTrim("funitid"));//单位id
-                    //                    map.put("fprice", recordEle.elementTextTrim("fprice"));//折后单价
                     StockInfo stockInfo = new StockInfo();
                     stockInfo.setFname(map.get("fname"));//名称
                     stockInfo.setAddress(map.get("fname1"));//哪个仓库

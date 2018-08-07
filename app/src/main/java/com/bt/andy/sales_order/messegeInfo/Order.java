@@ -13,6 +13,8 @@ public class Order {
     private String             point;
     //业务类型
     private String             businesstype;
+    //摘要
+    private String             remark;
     //收货地址
     private String             address;
     //商品详情
@@ -56,6 +58,14 @@ public class Order {
 
     public void setBusinesstype(String businesstype) {
         this.businesstype = businesstype;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public String getRemark() {
+        return remark;
     }
 
     public String getAddress() {

@@ -79,9 +79,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private Spinner                       mSpinner;//配送类型选择条目
     private String                        deliveryId;//类型代码,配送类型
     private EditText                      mEdit_address;//配送地址
+    private EditText                      edit_write;//摘要
     private Button                        mBt_submit;
     private LinearLayout                  mLinear_sum;//总金额
     private LinearLayout                  mLinear_type;
+    private LinearLayout                  linear_write;
     private LinearLayout                  mLinear_address;
     private List<Map<String, String>>     mPsData;
     private String                        mFpoints;//积分
@@ -90,6 +92,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private DropdownButton                mDownbt;//下拉框显示模糊查询结果
     private List<DropBean>                mGoodsNameList;//放置商品名称
     private double                        mTotalPrice;//记录总金额
+    private String defAddress = "";//记录查询的会员默认地址
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -115,6 +118,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mTv_sum_price = mRootView.findViewById(R.id.tv_sum_price);//总金额计价
         mLinear_type = mRootView.findViewById(R.id.linear_type);//选择配送类型布局
         mSpinner = mRootView.findViewById(R.id.spinner);//配送类型选择条目
+        linear_write = mRootView.findViewById(R.id.linear_write);//摘要布局
+        edit_write = mRootView.findViewById(R.id.edit_write);
         mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
         mEdit_address = mRootView.findViewById(R.id.edit_address);//配送地址
         mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
@@ -167,6 +172,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mBt_submit.setVisibility(View.GONE);
         mLinear_sum.setVisibility(View.GONE);
         mLinear_type.setVisibility(View.GONE);
+        linear_write.setVisibility(View.GONE);
         mLinear_address.setVisibility(View.GONE);
         mDownbt.setVisibility(View.GONE);
     }
@@ -188,8 +194,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     }
                     mLinear_sum.setVisibility(View.GONE);
                     mLinear_type.setVisibility(View.GONE);
+                    linear_write.setVisibility(View.GONE);
                     mLinear_address.setVisibility(View.GONE);
-                }else {
+                } else {
                     mTotalPrice = 0;
                     for (SubtableInfo info : mData) {
                         mTotalPrice = mTotalPrice + info.getSum_pric();
@@ -228,6 +235,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 ToastUtils.showToast(getContext(), "等待网络确认会员号");
                 String fmobile = String.valueOf(mEdit_phone.getText()).trim();
                 ProgressDialogUtil.startShow(getContext(), "正在查询，请稍等。。。");
+                defAddress = "";
                 MemberTask memberTask = new MemberTask(fmobile);
                 memberTask.execute();
                 break;
@@ -245,6 +253,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
             case R.id.bt_submit:
                 String phone = String.valueOf(mEdit_phone.getText()).trim();
                 String name = String.valueOf(mEdit_name.getText()).trim();
+                String remark = String.valueOf(edit_write.getText()).trim();
                 String address = String.valueOf(mEdit_address.getText()).trim();
                 if ("".equals(phone) || "手机号".equals(phone)) {
                     ToastUtils.showToast(getContext(), "请填写会员手机号");
@@ -258,8 +267,12 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     ToastUtils.showToast(getContext(), "请选择配送方式");
                     return;
                 }
+                if ("".equals(remark) || "...".equals(remark)) {
+                    ToastUtils.showToast(getContext(), "请填写摘要");
+                    return;
+                }
                 if ("".equals(address) || "...".equals(address)) {
-                    ToastUtils.showToast(getContext(), "请选填写送货地址");
+                    ToastUtils.showToast(getContext(), "请填写送货地址");
                     return;
                 }
                 //TODO:提交总表到服务器
@@ -268,6 +281,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 order.setMembermobile(phone);
                 order.setMembername(name);
                 order.setBusinesstype(deliveryId);
+                order.setRemark(remark);
                 order.setAddress(address);
                 order.setSubList(mData);
                 order.setPoint(mFpoints);//填写积分
@@ -332,7 +346,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     }
                     mTv_sum_price.setText("¥" + mTotalPrice);
                     mLinear_type.setVisibility(View.VISIBLE);
+                    linear_write.setVisibility(View.VISIBLE);
                     mLinear_address.setVisibility(View.VISIBLE);
+                    if (!"".equals(defAddress)) {
+                        mEdit_address.setText(defAddress);
+                    }
                     if (!mBt_submit.isShown()) {
                         mBt_submit.setVisibility(View.VISIBLE);
                     }
@@ -446,6 +464,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 cust.addElement("FHeadSelfS01100").setText(order.getPoint());
                 //业务类型
                 cust.addElement("FHeadSelfS0167").setText(order.getBusinesstype());
+                //摘要
+                cust.addElement("FExplanation").setText(order.getRemark());
                 //送货地址
                 cust.addElement("FDeliveryAddress").setText(order.getAddress());
 
@@ -505,6 +525,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 mGoodsAdapter.notifyDataSetChanged();
                 mLinear_sum.setVisibility(View.GONE);
                 mLinear_type.setVisibility(View.GONE);
+                linear_write.setVisibility(View.GONE);
                 mLinear_address.setVisibility(View.GONE);
                 mBt_submit.setVisibility(View.GONE);
             } else {
@@ -585,7 +606,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
 
         @Override
         protected String doInBackground(Void... voids) {
-            String sql = "select fname,fmobile,favailablepoints from icvip where fmobile like '%" + fmobile + "%'";
+            String sql = "select fname,fmobile,favailablepoints,FAddr from icvip where FMobile like '%" + fmobile + "%'";
             Map<String, String> map = new HashMap<>();
             map.put("FSql", sql);
             map.put("FTable", "t_icitem");
@@ -603,9 +624,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     Iterator iter = ele.elementIterator("Cust");
                     while (iter.hasNext()) {
                         Element rec = (Element) iter.next();
-                        String fmobile = rec.elementTextTrim("fmobile");//手机号
+                        String fmobile = rec.elementTextTrim("fmobile");//手机号15162867733
                         memberName = rec.elementTextTrim("fname");//名
-                        mEdit_name.setText(memberName);
+                        //默认地址
+                        defAddress = rec.elementTextTrim("FAddr");
+                        mEdit_name.setText(memberName + "/" + defAddress);
                         //积分
                         mFpoints = rec.elementTextTrim("favailablepoints");
                     }
