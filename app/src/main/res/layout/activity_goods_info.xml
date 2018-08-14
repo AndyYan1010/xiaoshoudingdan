@@ -417,5 +417,5 @@
         android:layout_below="@+id/in_title"
         android:background="@color/white"
         android:src="@drawable/icon_nonet"
-        android:visibility="gone"/>
+        android:visibility="visible"/>
 </RelativeLayout>
