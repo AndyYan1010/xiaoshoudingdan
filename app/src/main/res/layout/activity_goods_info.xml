@@ -416,6 +416,5 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/in_title"
         android:background="@color/white"
-        android:src="@drawable/icon_nonet"
-        android:visibility="visible"/>
+        android:src="@drawable/icon_nonet"/>
 </RelativeLayout>
