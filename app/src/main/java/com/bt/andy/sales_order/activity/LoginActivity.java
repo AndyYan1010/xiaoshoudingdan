@@ -68,9 +68,9 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
                     //ToastUtils.showToast(LoginActivity.this,"请输入密码");
                     pass = "";
                 }
-                //                new LoginTask(number, pass).execute();
-                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(intent);
+                new LoginTask(number, pass).execute();
+                //                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                //                startActivity(intent);
                 break;
         }
     }

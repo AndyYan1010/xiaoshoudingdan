@@ -370,6 +370,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 String column1 = map.get("Column1");
                 double unClose = Double.parseDouble(column1);
                 tv_useful.setText("可用库存:" + (sum - unClose) + unit);
+                if ((sum - unClose) <= 0) {
+                    ToastUtils.showToast(GoodsDetailActivity.this, "可用库存为0,该商品不可下单");
+                    mBt_submit.setVisibility(View.GONE);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 ToastUtils.showToast(GoodsDetailActivity.this, "商品可用库存查询失败");

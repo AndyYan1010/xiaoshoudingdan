@@ -628,7 +628,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                         memberName = rec.elementTextTrim("fname");//名
                         //默认地址
                         defAddress = rec.elementTextTrim("FAddr");
-                        mEdit_name.setText(memberName + "/" + defAddress);
+                        mEdit_name.setText(memberName + "/默认地址：" + defAddress);
                         //积分
                         mFpoints = rec.elementTextTrim("favailablepoints");
                     }
