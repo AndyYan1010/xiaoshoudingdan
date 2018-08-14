@@ -44,4 +44,8 @@
     <color name="red">#FF0000</color>
     <color name="green">#56B113</color>
 
+    <!--时间选择器-->
+    <color name="text1">#59B29C</color>
+    <color name="text2">#333333</color>
+    <color name="background">#FFFFFF</color>
 </resources>

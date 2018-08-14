@@ -10,24 +10,33 @@ import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
+import com.bt.andy.sales_order.adapter.SpinnerStockAdapter;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
+import com.bt.andy.sales_order.viewmodle.CustomDatePicker;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -44,24 +53,29 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private TextView  mTv_title;
     private ImageView img_noInt;
     private int resultCode = 9527;//设置商品详情返回参数对应码
-    private TextView mTv_name1;//商品名
-    private TextView mTv_name2;//商品名
-    private TextView mTv_unit_price;//单价
-    private TextView mTv_stock;//库存
-    private TextView tv_useful;//可用库存
-    private TextView mTv_reduce;//减法
-    private EditText mEdit_num;//购买数量
-    private TextView mTv_add;//加法
-    private TextView mTv_unit;//商品单位
-    private EditText mEdit_discount;//折后价
-    private TextView mTv_sumprice;//子单总金额
-    private Button   mBt_sure;//确认
-    private EditText mEdit_remarks;//备注
-    private Button   mBt_submit;//确定下单
+    private TextView            mTv_name1;//商品名
+    private TextView            mTv_name2;//商品名
+    private TextView            mTv_unit_price;//单价
+    private TextView            mTv_stock;//库存
+    private TextView            tv_useful;//可用库存
+    private TextView            mTv_reduce;//减法
+    private EditText            mEdit_num;//购买数量
+    private TextView            mTv_add;//加法
+    private TextView            mTv_unit;//商品单位
+    private EditText            mEdit_discount;//折后价
+    private TextView            mTv_sumprice;//子单总金额
+    private Button              mBt_sure;//确认
+    private EditText            mEdit_remarks;//备注
+    private Spinner             sp_stock;//选择仓库
+    private SpinnerStockAdapter stockAdapter;
+    private LinearLayout        linear_date;
+    private TextView            tv_date;//交货日期
+    private Button              mBt_submit;//确定下单
     private double goods_price  = 1000;//折后单价
     private String goodsLocalId = "";
     private String mGoodsId;
     private String mFunitid;//单位的id
+    private String outStock = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,6 +105,9 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mTv_sumprice = findViewById(R.id.tv_sumprice);
         mBt_sure = findViewById(R.id.bt_sure);
         mEdit_remarks = findViewById(R.id.edit_remarks);
+        sp_stock = findViewById(R.id.sp_stock);
+        linear_date = (LinearLayout) findViewById(R.id.linear_date);
+        tv_date = (TextView) findViewById(R.id.tv_date);
         mBt_submit = findViewById(R.id.bt_submit);
     }
 
@@ -98,7 +115,32 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         mImg_back.setVisibility(View.VISIBLE);
         mImg_back.setImageResource(R.drawable.back);
         mImg_back.setOnClickListener(this);
+        img_noInt.setOnClickListener(this);
         mTv_title.setText("商品详情");
+        //设置仓库下拉选择器
+        final List<String> mStockData = new ArrayList<>();
+        mStockData.add("发货仓库");
+        stockAdapter = new SpinnerStockAdapter(GoodsDetailActivity.this, mStockData);
+        sp_stock.setAdapter(stockAdapter);
+        sp_stock.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    outStock = "";
+                    ToastUtils.showToast(GoodsDetailActivity.this, "请选择发货仓库");
+                } else {
+                    outStock = mStockData.get(i);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+        //查询该商品有哪些仓库
+        searchGoodsStock(mGoodsId, mStockData);
+
         ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
         //访问网络，获取详情
         //根据扫描的代码查询
@@ -164,7 +206,18 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
 
             }
         });
+        linear_date.setOnClickListener(this);
         mBt_submit.setOnClickListener(this);
+        //获取当前日期
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        String data = simpleDateFormat.format(new Date());
+        tv_date.setText(data);
+    }
+
+    private void searchGoodsStock(String goodsId, List<String> mStockData) {
+        String sql2 = "select b.fnumber,b.fname,c.fnumber,c.fname,a.FQty,b.FGoodsBarCode from ICInventory a inner join t_ICItem b on a.FItemID=b.FItemID inner join t_Stock c on c.fitemid=a.FStockID  where b.FGoodsBarCode='" + goodsId + "' or b.fnumber='" + goodsId + "'";
+        //根据助记码或者名称模糊查询
+        new StockItemTask(sql2, mStockData).execute();
     }
 
     @Override
@@ -172,6 +225,8 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         switch (view.getId()) {
             case R.id.img_back:
                 giveUpThisOrder();
+                break;
+            case R.id.img_noInt:
                 break;
             case R.id.tv_reduce:
                 String snum = String.valueOf(mEdit_num.getText()).trim();
@@ -219,6 +274,18 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 mEdit_num.setEnabled(false);
                 mEdit_discount.setEnabled(false);
                 break;
+            case R.id.linear_date:
+                //打开时间选择器
+                CustomDatePicker dpk1 = new CustomDatePicker(GoodsDetailActivity.this, new CustomDatePicker.ResultHandler() {
+                    @Override
+                    public void handle(String time) { // 回调接口，获得选中的时间
+                        tv_date.setText(time);
+                    }
+                }, "2010-01-01 00:00", "2090-12-31 00:00"); // 初始化日期格式请用：yyyy-MM-dd HH:mm，否则不能正常运行
+                dpk1.showSpecificTime(true); // 显示时和分
+                dpk1.setIsLoop(true); // 允许循环滚动
+                dpk1.show(tv_date.getText().toString());
+                break;
             case R.id.bt_submit:
                 String remark = String.valueOf(mEdit_remarks.getText()).trim();
                 if ("...".equals(remark)) {
@@ -233,6 +300,8 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 intent.putExtra("goodsLocalId", goodsLocalId);
                 intent.putExtra("subremark", remark);
                 intent.putExtra("funitId", mFunitid);
+                intent.putExtra("fdate", String.valueOf(tv_date.getText()).trim().substring(0, 10));
+                intent.putExtra("stock", outStock);
                 setResult(resultCode, intent);
                 finish();
                 break;
@@ -326,7 +395,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 ToastUtils.showToast(GoodsDetailActivity.this, "未查到此商品");
                 finish();
             }
-            //            ProgressDialogUtil.hideDialog();
         }
     }
 
@@ -368,11 +436,16 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                     map.put("Column1", recordEle.elementTextTrim("Column1"));//订单未关闭数量
                 }
                 String column1 = map.get("Column1");
-                double unClose = Double.parseDouble(column1);
+                double unClose = 0;
+                if (null == column1 || "".equals(column1) || "null".equals(column1)) {
+                    unClose = 0;
+                } else {
+                    unClose = Double.parseDouble(column1);
+                }
                 tv_useful.setText("可用库存:" + (sum - unClose) + unit);
                 if ((sum - unClose) <= 0) {
-                    ToastUtils.showToast(GoodsDetailActivity.this, "可用库存为0,该商品不可下单");
-                    mBt_submit.setVisibility(View.GONE);
+                    ToastUtils.showToast(GoodsDetailActivity.this, "Tips:可用库存为0");
+                    //mBt_submit.setVisibility(View.GONE);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -381,6 +454,52 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
             }
             ProgressDialogUtil.hideDialog();
             img_noInt.setVisibility(View.GONE);
+        }
+    }
+
+    class StockItemTask extends AsyncTask<Void, String, String> {
+        private String       sql;
+        private List<String> mList;
+
+        StockItemTask(String sql, List<String> mStockData) {
+            this.sql = sql;
+            this.mList = mStockData;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            //            ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在查找,请稍等...");
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                Document doc = DocumentHelper.parseText(s);
+                Element ele = doc.getRootElement();
+                Iterator iter = ele.elementIterator("Cust");
+                HashMap<String, String> map = new HashMap<>();
+                while (iter.hasNext()) {
+                    Element recordEle = (Element) iter.next();
+                    map.put("fname1", recordEle.elementTextTrim("fname1"));//仓库
+                    mList.add(map.get("fname1"));//哪个仓库
+                }
+                //填充数据到页面
+                stockAdapter.notifyDataSetChanged();
+            } catch (Exception e) {
+                e.printStackTrace();
+                ToastUtils.showToast(GoodsDetailActivity.this, "查询出错,未查到此商品仓库");
+            }
+            //            ProgressDialogUtil.hideDialog();
         }
     }
 }

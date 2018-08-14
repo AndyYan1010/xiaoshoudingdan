@@ -248,7 +248,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 Task task = new Task(goodsMid);
                 task.execute();
                 //跳转商品详情界面，携带商品id
-                //                sendGoodsInfo(goodsid);
+                //sendGoodsInfo(goodsid);
                 break;
             case R.id.bt_submit:
                 String phone = String.valueOf(mEdit_phone.getText()).trim();
@@ -268,8 +268,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     return;
                 }
                 if ("".equals(remark) || "...".equals(remark)) {
-                    ToastUtils.showToast(getContext(), "请填写摘要");
-                    return;
+                    remark = "";
+                    //                    ToastUtils.showToast(getContext(), "请填写摘要");
+                    //                    return;
                 }
                 if ("".equals(address) || "...".equals(address)) {
                     ToastUtils.showToast(getContext(), "请填写送货地址");
@@ -326,6 +327,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     double sumPrice = Double.parseDouble(data.getStringExtra("sumPrice"));
                     String goodsLocalId = data.getStringExtra("goodsLocalId");
                     String remark = data.getStringExtra("subremark");
+                    String fdate = data.getStringExtra("fdate");//交货日期
+                    String stock = data.getStringExtra("stock");
                     String funitId = data.getStringExtra("funitId");//单位id
                     //填入总表list中
                     SubtableInfo goodsInfo = new SubtableInfo();
@@ -334,6 +337,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setNumber(number);
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
+                    goodsInfo.setWStock(stock);
+                    goodsInfo.setFdate(fdate);
                     goodsInfo.setRemark(remark);
                     goodsInfo.setUnitid(funitId);
                     mData.add(goodsInfo);
@@ -484,6 +489,10 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     cust2.addElement("FPrice").setText(String.valueOf(info.getZh_unit_price()));
                     //金额
                     cust2.addElement("FAmount").setText(String.valueOf(info.getSum_pric()));
+                    //出货仓库
+                    cust2.addElement("stock").setText(info.getWStock());
+                    //交货日期
+                    cust2.addElement("fdate").setText(info.getFdate());
                     //备注
                     cust2.addElement("fnote").setText(info.getRemark());
                     //折后价格

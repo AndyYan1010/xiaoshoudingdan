@@ -53,6 +53,7 @@ public class LvGoodsAdapter extends BaseAdapter {
             viewHolder.tv_name = view.findViewById(R.id.tv_name);
             viewHolder.tv_unit_price = view.findViewById(R.id.tv_unit_price);
             viewHolder.tv_num = view.findViewById(R.id.tv_num);
+            viewHolder.tv_data = view.findViewById(R.id.tv_data);
             viewHolder.tv_total = view.findViewById(R.id.tv_total);
             view.setTag(viewHolder);
         } else {
@@ -63,7 +64,9 @@ public class LvGoodsAdapter extends BaseAdapter {
         double zh_unit_price = subtableInfo.getZh_unit_price();
         int number = subtableInfo.getNumber();
         double sum_pric = subtableInfo.getSum_pric();
+        String fdate = subtableInfo.getFdate();
         viewHolder.tv_name.setText(goodsName);
+        viewHolder.tv_data.setText(fdate);
         viewHolder.tv_unit_price.setText("¥" + zh_unit_price);
         viewHolder.tv_num.setText("x" + number);
         viewHolder.tv_total.setText("¥" + sum_pric);
@@ -71,6 +74,6 @@ public class LvGoodsAdapter extends BaseAdapter {
     }
 
     private class MyViewHolder {
-        TextView tv_name, tv_unit_price, tv_num, tv_total;
+        TextView tv_name, tv_unit_price, tv_num, tv_total, tv_data;
     }
 }

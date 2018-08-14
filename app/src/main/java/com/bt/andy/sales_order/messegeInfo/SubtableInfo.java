@@ -30,6 +30,8 @@ public class SubtableInfo {
     private double zh_unit_price;//折后单价
     private double sum_pric;    //合计费用
     private String remark;      //备注
+    private String fdate;//交货日期
+    private String stock;
 
     public String getGoodsName() {
         return goodsName;
@@ -93,5 +95,21 @@ public class SubtableInfo {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getFdate() {
+        return fdate;
+    }
+
+    public void setFdate(String fdate) {
+        this.fdate = fdate;
+    }
+
+    public String getWStock() {
+        return stock;
+    }
+
+    public void setWStock(String stock) {
+        this.stock = stock;
     }
 }
