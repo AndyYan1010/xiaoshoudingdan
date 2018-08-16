@@ -328,7 +328,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     String goodsLocalId = data.getStringExtra("goodsLocalId");
                     String remark = data.getStringExtra("subremark");
                     String fdate = data.getStringExtra("fdate");//交货日期
-                    String stock = data.getStringExtra("stock");
+                    String ware = data.getStringExtra("ware");
                     String funitId = data.getStringExtra("funitId");//单位id
                     //填入总表list中
                     SubtableInfo goodsInfo = new SubtableInfo();
@@ -337,7 +337,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setNumber(number);
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
-                    goodsInfo.setWStock(stock);
+                    goodsInfo.setWStock(ware);
                     goodsInfo.setFdate(fdate);
                     goodsInfo.setRemark(remark);
                     goodsInfo.setUnitid(funitId);
@@ -490,7 +490,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     //金额
                     cust2.addElement("FAmount").setText(String.valueOf(info.getSum_pric()));
                     //出货仓库
-                    cust2.addElement("stock").setText(info.getWStock());
+                    cust2.addElement("FStockID").setText(info.getWStock());
                     //交货日期
                     cust2.addElement("fdate").setText(info.getFdate());
                     //备注

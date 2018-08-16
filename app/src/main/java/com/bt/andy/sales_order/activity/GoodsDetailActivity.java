@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.adapter.SpinnerStockAdapter;
+import com.bt.andy.sales_order.messegeInfo.WareInfo;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
@@ -118,8 +119,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         img_noInt.setOnClickListener(this);
         mTv_title.setText("商品详情");
         //设置仓库下拉选择器
-        final List<String> mStockData = new ArrayList<>();
-        mStockData.add("发货仓库");
+        final List<WareInfo> mStockData = new ArrayList<>();
+        WareInfo wareInfo = new WareInfo();
+        wareInfo.setFname("请选择发货仓库");
+        mStockData.add(wareInfo);
         stockAdapter = new SpinnerStockAdapter(GoodsDetailActivity.this, mStockData);
         sp_stock.setAdapter(stockAdapter);
         sp_stock.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -129,7 +132,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                     outStock = "";
                     ToastUtils.showToast(GoodsDetailActivity.this, "请选择发货仓库");
                 } else {
-                    outStock = mStockData.get(i);
+                    outStock = mStockData.get(i).getFitemid();
                 }
             }
 
@@ -214,8 +217,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         tv_date.setText(data);
     }
 
-    private void searchGoodsStock(String goodsId, List<String> mStockData) {
-        String sql2 = "select b.fnumber,b.fname,c.fnumber,c.fname,a.FQty,b.FGoodsBarCode from ICInventory a inner join t_ICItem b on a.FItemID=b.FItemID inner join t_Stock c on c.fitemid=a.FStockID  where b.FGoodsBarCode='" + goodsId + "' or b.fnumber='" + goodsId + "'";
+    private void searchGoodsStock(String goodsId, List<WareInfo> mStockData) {
+        //        String sql2 = "select b.fnumber,b.fname,c.fnumber,c.fname,a.FQty,b.FGoodsBarCode from ICInventory a inner join t_ICItem b on a.FItemID=b.FItemID inner join t_Stock c on c.fitemid=a.FStockID  where b.FGoodsBarCode='" + goodsId + "' or b.fnumber='" + goodsId + "'";
+        String sql2 = "select fname,fitemid from t_stock";
+
         //根据助记码或者名称模糊查询
         new StockItemTask(sql2, mStockData).execute();
     }
@@ -301,7 +306,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 intent.putExtra("subremark", remark);
                 intent.putExtra("funitId", mFunitid);
                 intent.putExtra("fdate", String.valueOf(tv_date.getText()).trim().substring(0, 10));
-                intent.putExtra("stock", outStock);
+                intent.putExtra("ware", outStock);
                 setResult(resultCode, intent);
                 finish();
                 break;
@@ -458,10 +463,10 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     }
 
     class StockItemTask extends AsyncTask<Void, String, String> {
-        private String       sql;
-        private List<String> mList;
+        private String         sql;
+        private List<WareInfo> mList;
 
-        StockItemTask(String sql, List<String> mStockData) {
+        StockItemTask(String sql, List<WareInfo> mStockData) {
             this.sql = sql;
             this.mList = mStockData;
         }
@@ -469,7 +474,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //            ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在查找,请稍等...");
+            // ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在查找,请稍等...");
         }
 
         @Override
@@ -490,8 +495,12 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 HashMap<String, String> map = new HashMap<>();
                 while (iter.hasNext()) {
                     Element recordEle = (Element) iter.next();
-                    map.put("fname1", recordEle.elementTextTrim("fname1"));//仓库
-                    mList.add(map.get("fname1"));//哪个仓库
+                    map.put("fname", recordEle.elementTextTrim("fname"));//仓库
+                    map.put("fitemid", recordEle.elementTextTrim("fitemid"));//仓库id
+                    WareInfo wareInfo = new WareInfo();
+                    wareInfo.setFname(map.get("fname"));
+                    wareInfo.setFitemid(map.get("fitemid"));
+                    mList.add(wareInfo);//哪个仓库
                 }
                 //填充数据到页面
                 stockAdapter.notifyDataSetChanged();

@@ -7,6 +7,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.bt.andy.sales_order.R;
+import com.bt.andy.sales_order.messegeInfo.WareInfo;
 
 import java.util.List;
 
@@ -21,9 +22,9 @@ import java.util.List;
 
 public class SpinnerStockAdapter extends BaseAdapter {
     private Context      mContext;
-    private List<String> mList;
+    private List<WareInfo> mList;
 
-    public SpinnerStockAdapter(Context context, List<String> list) {
+    public SpinnerStockAdapter(Context context, List<WareInfo> list) {
         this.mContext = context;
         this.mList = list;
     }
@@ -54,7 +55,7 @@ public class SpinnerStockAdapter extends BaseAdapter {
         } else {
             viewHolder = (MyViewHolder) view.getTag();
         }
-        viewHolder.tv_kind.setText(mList.get(i));
+        viewHolder.tv_kind.setText(mList.get(i).getFname());
         return view;
     }
 
