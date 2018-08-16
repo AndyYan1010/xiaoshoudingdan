@@ -32,6 +32,11 @@ public class SubtableInfo {
     private String remark;      //备注
     private String fdate;//交货日期
     private String stock;
+    /**
+     * alloca : 5888
+     */
+
+    private String alloca;
 
     public String getGoodsName() {
         return goodsName;
@@ -111,5 +116,13 @@ public class SubtableInfo {
 
     public void setWStock(String stock) {
         this.stock = stock;
+    }
+
+    public String getAlloca() {
+        return alloca;
+    }
+
+    public void setAlloca(String alloca) {
+        this.alloca = alloca;
     }
 }

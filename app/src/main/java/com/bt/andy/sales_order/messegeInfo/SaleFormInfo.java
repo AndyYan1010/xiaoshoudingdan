@@ -24,6 +24,12 @@ public class SaleFormInfo {
     private String unit_price;
     private String num;
     private String sum;
+    /**
+     * memName : lishuangying
+     */
+
+    private String memName;
+
 
     public String getFbillno() {
         return fbillno;
@@ -63,5 +69,13 @@ public class SaleFormInfo {
 
     public void setSum(String sum) {
         this.sum = sum;
+    }
+
+    public String getMemName() {
+        return memName;
+    }
+
+    public void setMemName(String memName) {
+        this.memName = memName;
     }
 }

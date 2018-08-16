@@ -7,24 +7,24 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.bt.andy.sales_order.R;
-import com.bt.andy.sales_order.messegeInfo.WareInfo;
+import com.bt.andy.sales_order.messegeInfo.AllocationInfo;
 
 import java.util.List;
 
 /**
  * @创建者 AndyYan
- * @创建时间 2018/8/14 17:31
+ * @创建时间 2018/8/16 16:58
  * @描述 ${TODO}
  * @更新者 $Author$
  * @更新时间 $Date$
  * @更新描述 ${TODO}
  */
 
-public class SpinnerStockAdapter extends BaseAdapter {
-    private Context        mContext;
-    private List<WareInfo> mList;
+public class SpinnerAllocaAdapter extends BaseAdapter {
+    private Context              mContext;
+    private List<AllocationInfo> mList;
 
-    public SpinnerStockAdapter(Context context, List<WareInfo> list) {
+    public SpinnerAllocaAdapter(Context context, List<AllocationInfo> list) {
         this.mContext = context;
         this.mList = list;
     }
@@ -55,7 +55,7 @@ public class SpinnerStockAdapter extends BaseAdapter {
         } else {
             viewHolder = (MyViewHolder) view.getTag();
         }
-        viewHolder.tv_kind.setText(mList.get(i).getFname());
+        viewHolder.tv_kind.setText(mList.get(i).getFName());
         return view;
     }
 

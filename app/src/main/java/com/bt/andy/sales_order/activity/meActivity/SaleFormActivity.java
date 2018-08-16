@@ -154,9 +154,11 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
             //            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166" +
             //                    " from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on c.fitemid=b.fitemid";
 
-            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166," +
-                    "d.fname  from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on " +
-                    "c.fitemid=b.fitemid inner join t_user d on d.fuserid=a.fbillerid" + " where d.fname='" + MyAppliaction.memID + "'";
+            //            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166," +
+            //                    "d.fname  from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on " +
+            //                    "c.fitemid=b.fitemid inner join t_user d on d.fuserid=a.fbillerid" + " where d.fname='" + MyAppliaction.memID + "'";
+            String sql = "select c.fname,b.fauxqty,b.FAuxPrice,b.famount,b.FNote,a.FBillNo,FHeadSelfS0165,FHeadSelfS0166,d.fname  from SEOrder a inner join SEOrderEntry b on a.finterid=b.finterid inner join t_icitem c on \n" +
+                    "c.fitemid=b.fitemid inner join t_user d on d.fuserid=a.fbillerid where d.FDescription='" + MyAppliaction.memID + "' order by a.fdate";
             Log.i("主表查询语句", sql);
             rpc.addProperty("FSql", sql);
             rpc.addProperty("FTable", "t_Currency");
@@ -194,7 +196,11 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
                     String unit_price = recordEle.elementTextTrim("FAuxPrice");//单价
                     String num = recordEle.elementTextTrim("fauxqty");//数量
                     String sum = recordEle.elementTextTrim("famount");//总价
-
+                    String name1 = recordEle.elementTextTrim("FHeadSelfS0165");//销售对象(会员)
+                    String memName = name1;
+                    if (name1.contains("/")) {
+                        memName = name1.split("/")[0];
+                    }
                     SaleFormInfo formInfo = new SaleFormInfo();
                     double pri = Double.parseDouble(unit_price);
                     double number = Double.parseDouble(num);
@@ -207,6 +213,7 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
                     formInfo.setUnit_price(uniPri);
                     formInfo.setNum(numT);
                     formInfo.setSum(sum);
+                    formInfo.setMemName(memName);
 
                     mData.add(formInfo);
                 }
@@ -216,7 +223,7 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
                     @Override
                     public void run() {
                         ToastUtils.showToast(SaleFormActivity.this, "查找详情出错");
-                        finish();
+                        //                        finish();
                     }
                 });
             }

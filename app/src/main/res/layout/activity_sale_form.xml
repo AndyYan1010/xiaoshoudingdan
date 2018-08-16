@@ -7,9 +7,23 @@
 
     <include layout="@layout/title_view"/>
 
-    <ListView
-        android:id="@+id/lv_form"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    </ListView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:gravity="center_horizontal"
+            android:text="未查找到销售数据"
+            android:textColor="@color/blue_87"
+            android:textSize="18sp"/>
+
+        <ListView
+            android:id="@+id/lv_form"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </ListView>
+    </RelativeLayout>
 </LinearLayout>

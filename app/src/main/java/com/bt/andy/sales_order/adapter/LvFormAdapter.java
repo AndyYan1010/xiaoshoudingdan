@@ -55,6 +55,7 @@ public class LvFormAdapter extends BaseAdapter {
             viewHolder.tv_unit_price = view.findViewById(R.id.tv_unit_price);
             viewHolder.tv_num = view.findViewById(R.id.tv_num);
             viewHolder.tv_total = view.findViewById(R.id.tv_total);
+            viewHolder.tv_mem_name = view.findViewById(R.id.tv_mem_name);
             view.setTag(viewHolder);
         } else {
             viewHolder = (MyViewHolder) view.getTag();
@@ -65,15 +66,17 @@ public class LvFormAdapter extends BaseAdapter {
         String unit_price = saleFormInfo.getUnit_price();
         String num = saleFormInfo.getNum();
         String sum = saleFormInfo.getSum();
+        String memName = saleFormInfo.getMemName();
         viewHolder.tv_billno.setText(fbillno);
         viewHolder.tv_name.setText(name);
         viewHolder.tv_unit_price.setText(unit_price);
         viewHolder.tv_num.setText("x" + num);
         viewHolder.tv_total.setText(sum);
+        viewHolder.tv_mem_name.setText(memName);
         return view;
     }
 
     private class MyViewHolder {
-        TextView tv_billno, tv_name, tv_unit_price, tv_num, tv_total;
+        TextView tv_billno, tv_name, tv_unit_price, tv_num, tv_total, tv_mem_name;
     }
 }

@@ -282,7 +282,14 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 Order order = new Order();
                 order.setUserId(MyAppliaction.userID);
                 order.setMembermobile(phone);
-                order.setMembername(name);
+                String memName = "";
+                if (name.contains("/")) {
+                    String[] split = name.split("/");
+                    memName = split[0];
+                } else {
+                    memName = name;
+                }
+                order.setMembername(memName);
                 order.setBusinesstype(deliveryId);
                 order.setRemark(remark);
                 order.setAddress(address);
@@ -334,6 +341,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     String remark = data.getStringExtra("subremark");
                     String fdate = data.getStringExtra("fdate");//交货日期
                     String ware = data.getStringExtra("ware");
+                    String alloca = data.getStringExtra("alloca");
                     String funitId = data.getStringExtra("funitId");//单位id
                     //填入总表list中
                     SubtableInfo goodsInfo = new SubtableInfo();
@@ -343,6 +351,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
                     goodsInfo.setWStock(ware);
+                    goodsInfo.setAlloca(ware);
                     goodsInfo.setFdate(fdate);
                     goodsInfo.setRemark(remark);
                     goodsInfo.setUnitid(funitId);
@@ -504,14 +513,16 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     cust2.addElement("FAmount").setText(priceN);
                     //出货仓库
                     cust2.addElement("FStockID").setText(info.getWStock());
+                    //出货仓位
+                    cust2.addElement("FSPID").setText(info.getAlloca());
                     //交货日期
                     cust2.addElement("fdate").setText(info.getFdate());
                     //备注
                     cust2.addElement("fnote").setText(info.getRemark());
                     //折后价格
                     String priceH = String.valueOf(info.getSum_pric());
-                    if ("".equals(priceH)){
-                        priceH="0.00";
+                    if ("".equals(priceH)) {
+                        priceH = "0.00";
                     }
                     cust2.addElement("FAmountDiscount").setText(priceH);
                     //折后单价

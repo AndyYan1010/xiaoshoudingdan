@@ -96,6 +96,22 @@
         android:layout_marginTop="2dp">
 
         <TextView
+            android:id="@+id/tv_mem"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="会员名："
+            android:textSize="16sp"/>
+
+        <TextView
+            android:id="@+id/tv_mem_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/tv_mem"
+            android:text="李双"
+            android:textColor="@color/blue_87"
+            android:textSize="16sp"/>
+
+        <TextView
             android:id="@+id/tv_total"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

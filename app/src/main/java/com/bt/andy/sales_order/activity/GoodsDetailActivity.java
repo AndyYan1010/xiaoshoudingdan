@@ -20,7 +20,9 @@ import android.widget.TextView;
 
 import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.R;
+import com.bt.andy.sales_order.adapter.SpinnerAllocaAdapter;
 import com.bt.andy.sales_order.adapter.SpinnerStockAdapter;
+import com.bt.andy.sales_order.messegeInfo.AllocationInfo;
 import com.bt.andy.sales_order.messegeInfo.WareInfo;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
@@ -54,29 +56,34 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
     private TextView  mTv_title;
     private ImageView img_noInt;
     private int resultCode = 9527;//设置商品详情返回参数对应码
-    private TextView            mTv_name1;//商品名
-    private TextView            mTv_name2;//商品名
-    private TextView            mTv_unit_price;//单价
-    private TextView            mTv_stock;//库存
-    private TextView            tv_useful;//可用库存
-    private TextView            mTv_reduce;//减法
-    private EditText            mEdit_num;//购买数量
-    private TextView            mTv_add;//加法
-    private TextView            mTv_unit;//商品单位
-    private EditText            mEdit_discount;//折后价
-    private TextView            mTv_sumprice;//子单总金额
-    private Button              mBt_sure;//确认
-    private EditText            mEdit_remarks;//备注
-    private Spinner             sp_stock;//选择仓库
-    private SpinnerStockAdapter stockAdapter;
-    private LinearLayout        linear_date;
-    private TextView            tv_date;//交货日期
-    private Button              mBt_submit;//确定下单
+    private TextView             mTv_name1;//商品名
+    private TextView             mTv_name2;//商品名
+    private TextView             mTv_unit_price;//单价
+    private TextView             mTv_stock;//库存
+    private TextView             tv_useful;//可用库存
+    private TextView             mTv_reduce;//减法
+    private EditText             mEdit_num;//购买数量
+    private TextView             mTv_add;//加法
+    private TextView             mTv_unit;//商品单位
+    private EditText             mEdit_discount;//折后价
+    private TextView             mTv_sumprice;//子单总金额
+    private Button               mBt_sure;//确认
+    private EditText             mEdit_remarks;//备注
+    private Spinner              sp_stock;//选择仓库
+    private SpinnerStockAdapter  stockAdapter;
+    private LinearLayout         linear_allocation;
+    private Spinner              sp_allocation;//出货仓库下拉适配器
+    private SpinnerAllocaAdapter allocaAdapter;//出货仓位下拉适配器
+    private LinearLayout         linear_date;
+    private TextView             tv_date;//交货日期
+    private Button               mBt_submit;//确定下单
     private double goods_price  = 1000;//折后单价
     private String goodsLocalId = "";
     private String mGoodsId;
     private String mFunitid;//单位的id
-    private String outStock = "";
+    private String outStock  = "";//出货仓库
+    private String outAlloca = "";//仓位
+    private List<AllocationInfo> mAllocaData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +116,8 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         sp_stock = findViewById(R.id.sp_stock);
         linear_date = (LinearLayout) findViewById(R.id.linear_date);
         tv_date = (TextView) findViewById(R.id.tv_date);
+        linear_allocation = (LinearLayout) findViewById(R.id.linear_allocation);
+        sp_allocation = (Spinner) findViewById(R.id.sp_allocation);
         mBt_submit = findViewById(R.id.bt_submit);
     }
 
@@ -128,11 +137,14 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         sp_stock.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                outAlloca = "";
                 if (i == 0) {
                     outStock = "";
                     ToastUtils.showToast(GoodsDetailActivity.this, "请选择发货仓库");
                 } else {
                     outStock = mStockData.get(i).getFitemid();
+                    //查询仓位
+                    searchForFSPID(mStockData.get(i).getFname());
                 }
             }
 
@@ -143,10 +155,33 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         });
         //查询该商品有哪些仓库
         searchGoodsStock(mGoodsId, mStockData);
+        //设置仓位选择
+        mAllocaData = new ArrayList<>();
+        AllocationInfo allocationInfo = new AllocationInfo();
+        allocationInfo.setFName("请选择仓位");
+        mAllocaData.add(allocationInfo);
+        allocaAdapter = new SpinnerAllocaAdapter(GoodsDetailActivity.this, mAllocaData);
+        sp_allocation.setAdapter(allocaAdapter);
+        sp_allocation.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if (i == 0) {
+                    outAlloca = "";
+                    ToastUtils.showToast(GoodsDetailActivity.this, "请选择仓位");
+                } else {
+                    outAlloca = mAllocaData.get(i).getFitemid();
+                }
+            }
 
-        ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         //访问网络，获取详情
         //根据扫描的代码查询
+        ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在加载，请稍等...");
         String sql = "select top 1 isnull(d.fprice,0) fprice,a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID left join (select FPrice,FItemID,FBegDate from ICPrcPlyEntry ) d on a.fitemid=d.fitemid where a.fnumber='" + mGoodsId + "' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid,d.fprice,d.FBegDate order by d.FBegDate desc";
         //根据助记码或者名称模糊查询
         //String sql = "select a.fitemid,a.funitid,a.fname,a.FSalePrice,isnull(sum(b.FQty),0) FQty,c.fname funit from t_icitem a left join ICInventory b on a.fitemid=b.fitemid left join t_MeasureUnit c on c.fitemid=a.FUnitID where a.FHelpCode like'%" + mGoodsId + "%' or a.fname like '%" + mGoodsId + "%' group by a.fname,a.FSalePrice,c.fname,a.fitemid,a.funitid";
@@ -215,6 +250,14 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm");
         String data = simpleDateFormat.format(new Date());
         tv_date.setText(data);
+    }
+
+    private void searchForFSPID(String wareName) {
+        //仓位选择设置不可见
+        linear_allocation.setVisibility(View.GONE);
+        //        String sql = "select fitemid,FName from t_item where FItemClassID=3001 and fname='" + wareName + "'";
+        String sql = "select fitemid,FName from t_item where FItemClassID=3001 and fname like '%" + wareName + "%'";
+        new AllocationItemTask(sql).execute();
     }
 
     private void searchGoodsStock(String goodsId, List<WareInfo> mStockData) {
@@ -307,6 +350,7 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 intent.putExtra("funitId", mFunitid);
                 intent.putExtra("fdate", String.valueOf(tv_date.getText()).trim().substring(0, 10));
                 intent.putExtra("ware", outStock);
+                intent.putExtra("alloca", outAlloca);
                 setResult(resultCode, intent);
                 finish();
                 break;
@@ -474,7 +518,6 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            // ProgressDialogUtil.startShow(GoodsDetailActivity.this, "正在查找,请稍等...");
         }
 
         @Override
@@ -508,7 +551,59 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 e.printStackTrace();
                 ToastUtils.showToast(GoodsDetailActivity.this, "查询出错,未查到此商品仓库");
             }
-            //            ProgressDialogUtil.hideDialog();
+        }
+    }
+
+    class AllocationItemTask extends AsyncTask<Void, String, String> {
+        private String sql;
+
+        AllocationItemTask(String sql) {
+            this.sql = sql;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            try {
+                mAllocaData.clear();
+                AllocationInfo allocationInfo = new AllocationInfo();
+                allocationInfo.setFName("请选择仓位");
+                mAllocaData.add(allocationInfo);
+                Document doc = DocumentHelper.parseText(s);
+                Element ele = doc.getRootElement();
+                Iterator iter = ele.elementIterator("Cust");
+                HashMap<String, String> map = new HashMap<>();
+                while (iter.hasNext()) {
+                    Element recordEle = (Element) iter.next();
+                    map.put("FName", recordEle.elementTextTrim("FName"));//仓位
+                    map.put("fitemid", recordEle.elementTextTrim("fitemid"));//仓位id
+                    AllocationInfo allocaInfo = new AllocationInfo();
+                    allocaInfo.setFName(map.get("FName"));
+                    allocaInfo.setFitemid(map.get("fitemid"));
+                    mAllocaData.add(allocaInfo);
+                }
+                if (mAllocaData.size() > 1) {
+                    linear_allocation.setVisibility(View.VISIBLE);
+                    allocaAdapter.notifyDataSetChanged();
+                }
+                //填充数据到页面
+            } catch (Exception e) {
+                e.printStackTrace();
+                ToastUtils.showToast(GoodsDetailActivity.this, "查询仓位出错");
+            }
         }
     }
 }
