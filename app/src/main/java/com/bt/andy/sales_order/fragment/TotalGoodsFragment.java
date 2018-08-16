@@ -73,20 +73,20 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private int REQUEST_CODE                       = 1002;//接收扫描结果
     private int DETAIL_REQUESTCODE                 = 111;//商品详情页返回参数对应码
     private int ORDER_RESULT_CODE                  = 9527;//商品详情页返回结果码
-    private MyListView                    mLv_goods;
-    public  List<SubtableInfo>            mData;//存放每个子表的数据
-    private LvGoodsAdapter                mGoodsAdapter;
-    private Spinner                       mSpinner;//配送类型选择条目
-    private String                        deliveryId;//类型代码,配送类型
-    private EditText                      mEdit_address;//配送地址
-    private EditText                      edit_write;//摘要
-    private Button                        mBt_submit;
-    private LinearLayout                  mLinear_sum;//总金额
-    private LinearLayout                  mLinear_type;
-    private LinearLayout                  linear_write;
-    private LinearLayout                  mLinear_address;
-    private List<Map<String, String>>     mPsData;
-    private String                        mFpoints;//积分
+    private MyListView                mLv_goods;
+    public  List<SubtableInfo>        mData;//存放每个子表的数据
+    private LvGoodsAdapter            mGoodsAdapter;
+    private Spinner                   mSpinner;//配送类型选择条目
+    private String                    deliveryId;//类型代码,配送类型
+    private EditText                  mEdit_address;//配送地址
+    private EditText                  edit_write;//摘要
+    private Button                    mBt_submit;
+    private LinearLayout              mLinear_sum;//总金额
+    private LinearLayout              mLinear_type;
+    private LinearLayout              linear_write;
+    private LinearLayout              mLinear_address;
+    private List<Map<String, String>> mPsData;
+    private String mFpoints = "";//积分
     private String                        memberName;//会员名
     private List<HashMap<String, String>> mHTot;//记录模糊查询结果（商品名:商品id）
     private DropdownButton                mDownbt;//下拉框显示模糊查询结果
@@ -236,6 +236,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String fmobile = String.valueOf(mEdit_phone.getText()).trim();
                 ProgressDialogUtil.startShow(getContext(), "正在查询，请稍等。。。");
                 defAddress = "";
+                mFpoints = "";
                 MemberTask memberTask = new MemberTask(fmobile);
                 memberTask.execute();
                 break;
@@ -269,12 +270,13 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 }
                 if ("".equals(remark) || "...".equals(remark)) {
                     remark = "";
-                    //                    ToastUtils.showToast(getContext(), "请填写摘要");
-                    //                    return;
+                    // ToastUtils.showToast(getContext(), "请填写摘要");
+                    // return;
                 }
                 if ("".equals(address) || "...".equals(address)) {
-                    ToastUtils.showToast(getContext(), "请填写送货地址");
-                    return;
+                    address = "";
+                    //                    ToastUtils.showToast(getContext(), "请填写送货地址");
+                    //                    return;
                 }
                 //TODO:提交总表到服务器
                 Order order = new Order();
@@ -285,6 +287,9 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 order.setRemark(remark);
                 order.setAddress(address);
                 order.setSubList(mData);
+                if ("".equals(mFpoints)) {
+                    mFpoints = "0";
+                }
                 order.setPoint(mFpoints);//填写积分
                 SubmitTask submitTask = new SubmitTask(order);
                 submitTask.execute();
@@ -486,9 +491,17 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     //数量
                     cust2.addElement("FQty").setText(String.valueOf(info.getNumber()));
                     //折后单价
-                    cust2.addElement("FPrice").setText(String.valueOf(info.getZh_unit_price()));
+                    String priceU = String.valueOf(info.getZh_unit_price());
+                    if ("".equals(priceU)) {
+                        priceU = "0.00";
+                    }
+                    cust2.addElement("FPrice").setText(priceU);
                     //金额
-                    cust2.addElement("FAmount").setText(String.valueOf(info.getSum_pric()));
+                    String priceN = String.valueOf(info.getSum_pric());
+                    if ("".equals(priceN)) {
+                        priceN = "0.00";
+                    }
+                    cust2.addElement("FAmount").setText(priceN);
                     //出货仓库
                     cust2.addElement("FStockID").setText(info.getWStock());
                     //交货日期
@@ -496,7 +509,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     //备注
                     cust2.addElement("fnote").setText(info.getRemark());
                     //折后价格
-                    cust2.addElement("FAmountDiscount").setText(String.valueOf(info.getSum_pric()));
+                    String priceH = String.valueOf(info.getSum_pric());
+                    if ("".equals(priceH)){
+                        priceH="0.00";
+                    }
+                    cust2.addElement("FAmountDiscount").setText(priceH);
                     //折后单价
                     cust2.addElement("FPriceDiscount").setText(String.valueOf(info.getZh_unit_price()));
                 }

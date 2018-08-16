@@ -209,8 +209,8 @@
                 android:paddingTop="5dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginRight="5dp"
                     android:src="@drawable/money_icon"/>
 
@@ -240,7 +240,7 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
                 android:background="@drawable/bg_white_round"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
@@ -250,8 +250,8 @@
                 android:paddingTop="5dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginRight="5dp"
                     android:src="@drawable/distribution"/>
 
@@ -289,8 +289,8 @@
                 android:paddingTop="5dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginRight="5dp"
                     android:src="@drawable/zhaiyao"/>
 
@@ -327,8 +327,8 @@
                 android:paddingTop="5dp">
 
                 <ImageView
-                    android:layout_width="30dp"
-                    android:layout_height="30dp"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_marginRight="5dp"
                     android:src="@drawable/address"/>
 

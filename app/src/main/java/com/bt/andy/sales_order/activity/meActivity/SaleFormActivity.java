@@ -117,7 +117,6 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
                     Element recordEle = (Element) iter.next();
                     map.put("fnumber", recordEle.elementTextTrim("fnumber"));//物料条码
                     map.put("fname", recordEle.elementTextTrim("fname"));//物料名称
-
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -213,8 +212,13 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                ToastUtils.showToast(SaleFormActivity.this, "查找详情出错");
-                finish();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ToastUtils.showToast(SaleFormActivity.this, "查找详情出错");
+                        finish();
+                    }
+                });
             }
             return null;
         }
@@ -222,7 +226,6 @@ public class SaleFormActivity extends BaseActivity implements View.OnClickListen
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            System.out.println(s);
             ProgressDialogUtil.hideDialog();
             formAdapter.notifyDataSetChanged();
         }
