@@ -351,7 +351,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     goodsInfo.setSum_pric(sumPrice);
                     goodsInfo.setGoodsid(goodsLocalId);
                     goodsInfo.setWStock(ware);
-                    goodsInfo.setAlloca(ware);
+                    goodsInfo.setAlloca(alloca);
                     goodsInfo.setFdate(fdate);
                     goodsInfo.setRemark(remark);
                     goodsInfo.setUnitid(funitId);
@@ -454,7 +454,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         }
     }
 
-    class SubmitTask extends AsyncTask<Void, String, String> {
+    private class SubmitTask extends AsyncTask<Void, String, String> {
         Order order;
 
         SubmitTask(Order order) {
@@ -571,7 +571,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         }
     }
 
-    class TypeTask extends AsyncTask<Void, String, String> {//查询订单类型
+    private class TypeTask extends AsyncTask<Void, String, String> {//查询订单类型
 
         @Override
         protected void onPreExecute() {
