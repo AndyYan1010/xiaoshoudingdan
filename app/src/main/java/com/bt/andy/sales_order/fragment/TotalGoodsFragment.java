@@ -77,15 +77,19 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     public  List<SubtableInfo>        mData;//存放每个子表的数据
     private LvGoodsAdapter            mGoodsAdapter;
     private Spinner                   mSpinner;//配送类型选择条目
+    private Spinner                   sp_dire;//物流方向选择条目
     private String                    deliveryId;//类型代码,配送类型
     private EditText                  mEdit_address;//配送地址
+    private EditText                  et_acphone;//收货人手机号
     private EditText                  edit_write;//摘要
     private Button                    mBt_submit;
     private LinearLayout              mLinear_sum;//总金额
     private LinearLayout              mLinear_type;
     private LinearLayout              linear_write;
     private LinearLayout              mLinear_address;
-    private List<Map<String, String>> mPsData;
+    private LinearLayout              ll_acphone;
+    private LinearLayout              ll_dire;
+    private List<Map<String, String>> mPsData, mDireData;
     private String mFpoints = "";//积分
     private String                        memberName;//会员名
     private List<HashMap<String, String>> mHTot;//记录模糊查询结果（商品名:商品id）
@@ -93,6 +97,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
     private List<DropBean>                mGoodsNameList;//放置商品名称
     private double                        mTotalPrice;//记录总金额
     private String defAddress = "";//记录查询的会员默认地址
+    private String SaleManid  = "";//记录查询的业务员id
+    private String direKind   = "";//记录物流方向
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -122,9 +128,16 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         edit_write = mRootView.findViewById(R.id.edit_write);
         mLinear_address = mRootView.findViewById(R.id.linear_address);//配送地址布局
         mEdit_address = mRootView.findViewById(R.id.edit_address);//配送地址
+        ll_acphone = mRootView.findViewById(R.id.ll_acphone);//收货人手机号布局
+        et_acphone = mRootView.findViewById(R.id.et_acphone);//收货人手机号
+        ll_dire = mRootView.findViewById(R.id.ll_dire);//物流方向布局
+        sp_dire = mRootView.findViewById(R.id.sp_dire);//物流方向
+
         mBt_submit = mRootView.findViewById(R.id.bt_submit);//总表提交服务器
         mDownbt = mRootView.findViewById(R.id.downbt);
         new TypeTask().execute();//查询出所有业务类型
+        new SaleManTask().execute();//查询业务员id
+        new FParentTask().execute();//查询物流方向
     }
 
     private void initData() {
@@ -174,6 +187,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
         mLinear_type.setVisibility(View.GONE);
         linear_write.setVisibility(View.GONE);
         mLinear_address.setVisibility(View.GONE);
+        ll_acphone.setVisibility(View.GONE);
+        ll_dire.setVisibility(View.GONE);
         mDownbt.setVisibility(View.GONE);
     }
 
@@ -196,6 +211,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     mLinear_type.setVisibility(View.GONE);
                     linear_write.setVisibility(View.GONE);
                     mLinear_address.setVisibility(View.GONE);
+                    ll_acphone.setVisibility(View.GONE);
+                    ll_dire.setVisibility(View.GONE);
                 } else {
                     mTotalPrice = 0;
                     for (SubtableInfo info : mData) {
@@ -256,6 +273,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 String name = String.valueOf(mEdit_name.getText()).trim();
                 String remark = String.valueOf(edit_write.getText()).trim();
                 String address = String.valueOf(mEdit_address.getText()).trim();
+                String acphone = String.valueOf(et_acphone.getText()).trim();
                 if ("".equals(phone) || "手机号".equals(phone)) {
                     ToastUtils.showToast(getContext(), "请填写会员手机号");
                     return;
@@ -278,6 +296,13 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     //                    ToastUtils.showToast(getContext(), "请填写送货地址");
                     //                    return;
                 }
+                if ("".equals(acphone) || "...".equals(acphone)) {
+                    acphone = "";
+                }
+                if ("".equals(direKind)) {
+                    ToastUtils.showToast(getContext(), "请选择物流方向");
+                    return;
+                }
                 //TODO:提交总表到服务器
                 Order order = new Order();
                 order.setUserId(MyAppliaction.userID);
@@ -293,6 +318,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 order.setBusinesstype(deliveryId);
                 order.setRemark(remark);
                 order.setAddress(address);
+                order.setAcPhone(acphone);
+                order.setDire(direKind);
                 order.setSubList(mData);
                 if ("".equals(mFpoints)) {
                     mFpoints = "0";
@@ -367,6 +394,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     mLinear_type.setVisibility(View.VISIBLE);
                     linear_write.setVisibility(View.VISIBLE);
                     mLinear_address.setVisibility(View.VISIBLE);
+                    ll_acphone.setVisibility(View.VISIBLE);
+                    ll_dire.setVisibility(View.VISIBLE);
                     if (!"".equals(defAddress)) {
                         mEdit_address.setText(defAddress);
                     }
@@ -487,6 +516,12 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 cust.addElement("FExplanation").setText(order.getRemark());
                 //送货地址
                 cust.addElement("FDeliveryAddress").setText(order.getAddress());
+                //收货人手机号
+                cust.addElement("FMobile").setText(order.getAcPhone());
+                //物流方向
+                cust.addElement("FHeadSelfS01102").setText(order.getDire());
+                //业务员
+                cust.addElement("FEMPID").setText(SaleManid == null ? "" : SaleManid);
 
                 //表体
                 Document document2 = DocumentHelper.createDocument();
@@ -564,6 +599,8 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 mLinear_type.setVisibility(View.GONE);
                 linear_write.setVisibility(View.GONE);
                 mLinear_address.setVisibility(View.GONE);
+                ll_acphone.setVisibility(View.GONE);
+                ll_dire.setVisibility(View.GONE);
                 mBt_submit.setVisibility(View.GONE);
             } else {
                 ToastUtils.showToast(getContext(), "提交失败");
@@ -624,6 +661,104 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                     });
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private class SaleManTask extends AsyncTask<Void, String, String> {//查询订单类型
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select fempid from t_user where fuserid='" + MyAppliaction.userID + "'";
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (!s.equals("0")) {
+                try {
+                    Document doc = DocumentHelper.parseText(s);
+                    Element ele = doc.getRootElement();
+                    Iterator iter = ele.elementIterator("Cust");
+                    while (iter.hasNext()) {
+                        Element rec = (Element) iter.next();
+                        String fname = rec.elementTextTrim("fempid");
+                        Map<String, String> map = new HashMap<>();
+                        map.put("fempid", fname);
+                        SaleManid = map.get("fempid");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ToastUtils.showToast(getContext(), "获取业务员id失败");
+                }
+            }
+        }
+    }
+
+    private class FParentTask extends AsyncTask<Void, String, String> {//查询订单类型
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mDireData = new ArrayList<>();
+        }
+
+        @Override
+        protected String doInBackground(Void... voids) {
+            String sql = "select finterid,fname from t_SubMessage where FParentID=10008";
+            Map<String, String> map = new HashMap<>();
+            map.put("FSql", sql);
+            map.put("FTable", "t_icitem");
+            return SoapUtil.requestWebService(Consts.JA_select, map);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            if (!s.equals("0")) {
+                try {
+                    Document doc = DocumentHelper.parseText(s);
+                    Element ele = doc.getRootElement();
+                    Iterator iter = ele.elementIterator("Cust");
+                    while (iter.hasNext()) {
+                        Element rec = (Element) iter.next();
+                        String finterid = rec.elementTextTrim("finterid");
+                        String fname = rec.elementTextTrim("fname");
+                        Map<String, String> map = new HashMap<>();
+                        map.put("finterid", finterid);
+                        map.put("fname", fname);
+                        mDireData.add(map);
+                    }
+                    List<String> strList = new ArrayList<>();
+                    for (Map<String, String> map : mDireData) {
+                        strList.add(map.get("fname"));
+                    }
+                    MySpinnerAdapter adapter = new MySpinnerAdapter(getContext(), strList);
+                    sp_dire.setAdapter(adapter);
+                    sp_dire.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            direKind = mDireData.get(i).get("finterid");
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> adapterView) {
+
+                        }
+                    });
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ToastUtils.showToast(getContext(), "获取物流方向失败");
                 }
             }
         }

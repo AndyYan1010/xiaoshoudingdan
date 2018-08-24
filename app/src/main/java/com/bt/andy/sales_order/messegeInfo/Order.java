@@ -19,6 +19,14 @@ public class Order {
     private String             address;
     //商品详情
     private List<SubtableInfo> subList;
+    /**
+     * acPhone : 12522
+     * dire : 南方
+     */
+    //收货人手机号
+    private String             acPhone;
+    //物流方向
+    private String             dire;
 
     public String getUserId() {
         return userId;
@@ -82,5 +90,21 @@ public class Order {
 
     public void setSubList(List<SubtableInfo> subList) {
         this.subList = subList;
+    }
+
+    public String getAcPhone() {
+        return acPhone;
+    }
+
+    public void setAcPhone(String acPhone) {
+        this.acPhone = acPhone;
+    }
+
+    public String getDire() {
+        return dire;
+    }
+
+    public void setDire(String dire) {
+        this.dire = dire;
     }
 }
