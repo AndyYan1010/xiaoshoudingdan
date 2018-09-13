@@ -1,6 +1,6 @@
 package com.bt.andy.sales_order.activity;
 
-import android.app.Dialog;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,11 +8,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.bt.andy.sales_order.BaseActivity;
 import com.bt.andy.sales_order.MainActivity;
 import com.bt.andy.sales_order.MyAppliaction;
 import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.utils.Consts;
+import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
 import com.bt.andy.sales_order.utils.ToastUtils;
 
@@ -28,17 +28,17 @@ import java.util.Map;
  * @更新描述 ${TODO}
  */
 
-public class LoginActivity extends BaseActivity implements View.OnClickListener {
+public class LoginActivity extends Activity implements View.OnClickListener {
 
     private EditText mEdit_num;
     private EditText mEdit_psd;
     private Button   mBt_submit;
-    Dialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_actiivty);
+        MyAppliaction.flag = 0;
         getView();
         setData();
     }
@@ -47,7 +47,6 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         mEdit_num = (EditText) findViewById(R.id.edit_num);
         mEdit_psd = (EditText) findViewById(R.id.edit_psd);
         mBt_submit = (Button) findViewById(R.id.bt_login);
-        dialog = new Dialog(this);
     }
 
     private void setData() {
@@ -87,7 +86,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            dialog.show();
+            ProgressDialogUtil.startShow(LoginActivity.this, "正在登录，请稍后...");
         }
 
         @Override
@@ -101,7 +100,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            dialog.dismiss();
+            ProgressDialogUtil.hideDialog();
             if (s.contains("成功")) {
                 String[] split = s.split("/");
                 String sId = split[0];
