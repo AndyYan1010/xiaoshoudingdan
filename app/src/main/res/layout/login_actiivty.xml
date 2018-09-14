@@ -87,12 +87,24 @@
             android:textSize="16sp"/>
     </LinearLayout>
 
+    <CheckBox
+        android:id="@+id/ck_remPas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="15dp"
+        android:minHeight="30dp"
+        android:text="记住密码"
+        android:textColor="@color/blue_87"
+        android:textSize="14sp"/>
+
     <Button
         android:id="@+id/bt_login"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="40dp"
         android:background="@drawable/bg_round_blue_10"
         android:paddingBottom="10dp"
         android:paddingLeft="100dp"

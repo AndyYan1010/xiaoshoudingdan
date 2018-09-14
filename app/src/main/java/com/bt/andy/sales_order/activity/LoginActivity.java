@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import com.bt.andy.sales_order.MainActivity;
@@ -14,6 +16,7 @@ import com.bt.andy.sales_order.R;
 import com.bt.andy.sales_order.utils.Consts;
 import com.bt.andy.sales_order.utils.ProgressDialogUtil;
 import com.bt.andy.sales_order.utils.SoapUtil;
+import com.bt.andy.sales_order.utils.SpUtils;
 import com.bt.andy.sales_order.utils.ToastUtils;
 
 import java.util.HashMap;
@@ -32,7 +35,9 @@ public class LoginActivity extends Activity implements View.OnClickListener {
 
     private EditText mEdit_num;
     private EditText mEdit_psd;
+    private CheckBox ck_remPas;
     private Button   mBt_submit;
+    private boolean isRem = false;//记录是否保存账号密码
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,10 +51,26 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private void getView() {
         mEdit_num = (EditText) findViewById(R.id.edit_num);
         mEdit_psd = (EditText) findViewById(R.id.edit_psd);
+        ck_remPas = (CheckBox) findViewById(R.id.ck_remPas);
         mBt_submit = (Button) findViewById(R.id.bt_login);
     }
 
     private void setData() {
+        Boolean isRemem = SpUtils.getBoolean(LoginActivity.this, "isRem", false);
+        if (isRemem) {
+            isRem = true;
+            ck_remPas.setChecked(true);
+            String name = SpUtils.getString(LoginActivity.this, "name");
+            String psd = SpUtils.getString(LoginActivity.this, "psd");
+            mEdit_num.setText(name);
+            mEdit_psd.setText(psd);
+        }
+        ck_remPas.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                isRem = b;
+            }
+        });
         mBt_submit.setOnClickListener(this);
     }
 
@@ -67,10 +88,20 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     //ToastUtils.showToast(LoginActivity.this,"请输入密码");
                     pass = "";
                 }
+                //是否记住账号密码
+                isNeedRem(number, pass);
                 new LoginTask(number, pass).execute();
                 //                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 //                startActivity(intent);
                 break;
+        }
+    }
+
+    private void isNeedRem(String name, String psd) {
+        SpUtils.putBoolean(LoginActivity.this, "isRem", isRem);
+        if (isRem) {
+            SpUtils.putString(LoginActivity.this, "name", name);
+            SpUtils.putString(LoginActivity.this, "psd", psd);
         }
     }
 
