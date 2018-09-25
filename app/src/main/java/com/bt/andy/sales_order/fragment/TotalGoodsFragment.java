@@ -249,6 +249,7 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                 mEdit_phone.setText("");
                 break;
             case R.id.img_confirm:
+                mEdit_name.setText("");
                 ToastUtils.showToast(getContext(), "等待网络确认会员号");
                 String fmobile = String.valueOf(mEdit_phone.getText()).trim();
                 ProgressDialogUtil.startShow(getContext(), "正在查询，请稍等。。。");
@@ -800,7 +801,11 @@ public class TotalGoodsFragment extends Fragment implements View.OnClickListener
                         memberName = rec.elementTextTrim("fname");//名
                         //默认地址
                         defAddress = rec.elementTextTrim("FAddr");
-                        mEdit_name.setText(memberName + "/默认地址：" + defAddress);
+                        if ("".equals(defAddress)) {
+                            mEdit_name.setText(memberName);
+                        } else {
+                            mEdit_name.setText(memberName + "/默认地址：" + defAddress);
+                        }
                         //积分
                         mFpoints = rec.elementTextTrim("favailablepoints");
                     }

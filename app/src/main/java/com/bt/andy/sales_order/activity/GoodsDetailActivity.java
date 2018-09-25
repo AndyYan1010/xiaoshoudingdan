@@ -433,6 +433,9 @@ public class GoodsDetailActivity extends BaseActivity implements View.OnClickLis
                 //                goods_price = Double.parseDouble(map.get("fsaleprice"));
                 goods_price = Double.parseDouble(map.get("fprice"));
                 mEdit_discount.setText("" + goods_price);
+                if (goods_price == 0.00) {
+                    mEdit_discount.setText("");
+                }
                 mTv_sumprice.setText("" + goods_price);
                 goodsLocalId = map.get("itemid");
                 mFunitid = map.get("funitid");
